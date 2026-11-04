@@ -1,0 +1,23 @@
+name: Draft release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+      - run: bash scripts/verify-qr.sh
+      - name: Build universal app
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: VERSION="${RELEASE_TAG#v}" bash scripts/build.sh
+      - name: Create draft with checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 --draft --title "BarOTP $RELEASE_TAG" --notes "macOS 13+. Universal (Apple Silicon + Intel). This build is ad-hoc signed, not Developer ID signed or notarized; macOS may block the downloaded app. See README for installation and signed release instructions."
