@@ -1,4 +1,4 @@
-# BarOTP
+# 파닥키 · PadakKey
 
 맥 메뉴 막대에서 바로 확인하고 복사하는 오프라인 TOTP 인증 앱. macOS 13 이상, Apple Silicon / Intel 지원.
 
@@ -17,6 +17,11 @@
 - 한국어 UI, 시스템 라이트/다크 모드
 
 Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수 있습니다. 기존 앱의 계정에 자동 접근하거나 동기화하지 않습니다. Microsoft 푸시 승인, HOTP, Steam 특수 코드 및 Google Authenticator 일괄 이전(`otpauth-migration`) QR은 지원하지 않습니다.
+
+## 0.1.8 수정
+
+- 앱 이름을 파닥키(PadakKey)로 바꾸고 귀 움직임 간격을 8초에서 약 5초로 줄였습니다.
+- 기존 계정을 유지하기 위해 bundle ID와 키체인 서비스 식별자는 유지합니다. 저장소와 Swift 패키지 이름도 BarOTP를 유지합니다.
 
 ## 0.1.7 수정
 
@@ -65,10 +70,10 @@ Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수
 
 ```sh
 bash scripts/build.sh
-open dist/BarOTP.app
+open dist/파닥키.app
 ```
 
-`dist/BarOTP.app`을 응용 프로그램 폴더에 복사하세요. Dock 아이콘이나 기본 창 없이 상단 메뉴 막대에 방패 아이콘이 나타납니다. 앱 메뉴의 톱니바퀴에서 종료할 수 있습니다.
+`dist/파닥키.app`을 응용 프로그램 폴더에 복사하세요. Dock 아이콘이나 기본 창 없이 상단 메뉴 막대에 파닥몬 아이콘이 나타납니다. 앱 메뉴의 톱니바퀴에서 종료할 수 있습니다.
 
 사이트의 보안 → 2단계 인증 → 인증 앱 등록 화면에서 QR 이미지를 저장하거나 수동 키를 복사합니다. BarOTP의 **+**에서 등록한 뒤, 생성된 코드를 사이트에 입력해 설정을 마무리하세요. 이미 등록된 서비스에서 키를 다시 보여주지 않으면 해당 서비스의 재설정 절차가 필요합니다. 복구 코드는 별도로 보관하세요. QR 이미지에도 비밀 키가 포함되므로 공유하거나 저장소에 커밋하지 마세요.
 

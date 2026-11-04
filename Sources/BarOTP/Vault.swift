@@ -87,7 +87,7 @@ import OTPCore
         if status == errSecItemNotFound {
             var request = query
             request[kSecValueData as String] = data
-            request[kSecAttrLabel as String] = "BarOTP 인증 계정"
+            request[kSecAttrLabel as String] = "파닥키 인증 계정"
             request[kSecAttrSynchronizable as String] = false
             status = SecItemAdd(request as CFDictionary, nil)
         }

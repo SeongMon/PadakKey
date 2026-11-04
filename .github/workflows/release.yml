@@ -21,4 +21,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 --draft --title "BarOTP $RELEASE_TAG" --notes "macOS 13+. Universal (Apple Silicon + Intel). This build is ad-hoc signed, not Developer ID signed or notarized; macOS may block the downloaded app. See README for installation and signed release instructions."
+          gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 --draft --title "PadakKey $RELEASE_TAG" --notes "macOS 13+. Universal (Apple Silicon + Intel). This build is ad-hoc signed, not Developer ID signed or notarized; macOS may block the downloaded app. See README for installation and signed release instructions."

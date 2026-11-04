@@ -43,8 +43,8 @@ import SwiftUI
         timer?.invalidate(); timer = nil
         button?.image = idle
         guard enabled, !sleeping, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
-        let timer = Timer(timeInterval: 8, repeats: true) { [weak self] _ in Task { @MainActor in self?.flutter() } }
-        timer.tolerance = 1
+        let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in Task { @MainActor in self?.flutter() } }
+        timer.tolerance = 0.5
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
@@ -61,7 +61,7 @@ import SwiftUI
     }
     // Only the upper (ear) region changes. The body always uses the approved art.
     private static func render(flapping: Bool) -> NSImage? {
-        guard let base = asset("Patamon") else { return NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "BarOTP") }
+        guard let base = asset("Patamon") else { return NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "파닥키") }
         let alternate = flapping ? asset("PatamonFlap") : nil
         let size = NSSize(width: 22, height: 22)
         let image = NSImage(size: size, flipped: false) { rect in
@@ -82,7 +82,7 @@ import SwiftUI
             return true
         }
         image.isTemplate = false
-        image.accessibilityDescription = "BarOTP 파닥몬"
+        image.accessibilityDescription = "파닥키"
         return image
     }
 }
