@@ -30,14 +30,16 @@ import OTPCore
         // App-level ownership keeps the status item and registration window alive.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "BarOTP")
-        item.button?.toolTip = "BarOTP 0.1.5"
+        item.button?.toolTip = "BarOTP 0.1.6"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
         popover.delegate = self
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 370, height: 420)
-        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
+        popover.contentSize = NSSize(width: 370, height: 280)
+        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, resize: { [weak self] height in
+            self?.popover.contentSize = NSSize(width: 370, height: height)
+        }, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
             guard let self else { return }
             self.popover.performClose(nil)
             // Let the popover finish its close event before activating the window.
@@ -67,6 +69,16 @@ import OTPCore
 struct MainView: View {
     @ObservedObject var vault: Vault
     @ObservedObject var registration: RegistrationWindow
+    var resize: (CGFloat) -> Void
+    private var visibleAccounts: [OTPAccount] {
+        vault.accounts.filter { search.isEmpty || ($0.issuer + " " + $0.name).localizedCaseInsensitiveContains(search) }
+    }
+    private var panelHeight: CGFloat {
+        if vault.needsAuthorization || vault.error != nil { return 310 }
+        if !vault.loaded { return 210 }
+        if vault.accounts.isEmpty { return 350 }
+        return 168 + CGFloat(min(3, max(1, visibleAccounts.count))) * 112
+    }
     var authorize: () -> Void
     var addAccount: () -> Void
     @State private var search = ""
@@ -113,7 +125,10 @@ struct MainView: View {
                     TextField("서비스 또는 계정 검색", text: $search).textFieldStyle(.roundedBorder).padding(14)
                     ScrollView {
                         LazyVStack(spacing: 10) {
-                            ForEach(vault.accounts.filter { search.isEmpty || ($0.issuer + " " + $0.name).localizedCaseInsensitiveContains(search) }) { account in
+                            if visibleAccounts.isEmpty {
+                                Text("검색 결과가 없습니다.").foregroundStyle(.secondary).padding(.vertical, 24)
+                            }
+                            ForEach(visibleAccounts) { account in
                                 TimelineView(.periodic(from: .now, by: 1)) { context in
                                     accountRow(account, at: context.date)
                                 }
@@ -138,8 +153,9 @@ struct MainView: View {
                 Spacer()
                 Text("로컬 키체인 저장 · 복사 후 30초 뒤 지움").font(.system(size: 10)).foregroundStyle(.secondary)
             }.padding(12).fixedSize(horizontal: false, vertical: true)
-        }.frame(width: 370, height: 420)
-        .onAppear { loginEnabled = SMAppService.mainApp.status == .enabled }
+        }.frame(width: 370, height: panelHeight)
+        .onAppear { loginEnabled = SMAppService.mainApp.status == .enabled; resize(panelHeight) }
+        .onChange(of: panelHeight) { height in resize(height) }
         .onChange(of: vault.loaded) { loaded in if loaded { search = ""; copied = nil } }
         .onDisappear { copied = nil }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.sessionDidResignActiveNotification)) { _ in clearSession() }
@@ -157,7 +173,7 @@ struct MainView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(account.issuer.isEmpty ? "인증 계정" : account.issuer).font(.system(size: 13, weight: .semibold))
+                    Text(account.issuer.isEmpty ? "인증 계정" : account.issuer).font(.system(size: 13, weight: .semibold)).lineLimit(1)
                     Text(account.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
