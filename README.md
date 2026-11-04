@@ -2,7 +2,7 @@
 
 맥 메뉴 막대에서 바로 확인하고 복사하는 오프라인 TOTP 인증 앱. macOS 13 이상, Apple Silicon / Intel 지원.
 
-[GitHub 저장소](https://github.com/SeongMon/BarOTP) · [릴리스](https://github.com/SeongMon/BarOTP/releases)
+[GitHub 저장소](https://github.com/SeongMon/PadakKey) · [릴리스](https://github.com/SeongMon/PadakKey/releases)
 
 현재 초기 버전으로 Apple 공증 전입니다. 실사용 계정을 등록하기 전 테스트 계정으로 동작을 확인하세요.
 
@@ -21,7 +21,7 @@ Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수
 ## 0.1.8 수정
 
 - 앱 이름을 파닥키(PadakKey)로 바꾸고 귀 움직임 간격을 8초에서 약 5초로 줄였습니다.
-- 기존 계정을 유지하기 위해 bundle ID와 키체인 서비스 식별자는 유지합니다. 저장소와 Swift 패키지 이름도 BarOTP를 유지합니다.
+- 기존 계정을 유지하기 위해 bundle ID와 키체인 서비스 식별자는 유지합니다. Swift 패키지 이름은 BarOTP를 유지하며, GitHub 저장소는 PadakKey입니다.
 
 ## 0.1.7 수정
 
@@ -101,7 +101,7 @@ Command Line Tools만 설치되어 XCTest가 없으면 `bash scripts/verify-core
 git init -b main
 git add .
 git commit -m "Build BarOTP menu bar authenticator"
-git remote add origin https://github.com/SeongMon/BarOTP.git
+git remote add origin https://github.com/SeongMon/PadakKey.git
 git push -u origin main
 git tag v0.1.4
 git push origin v0.1.4
