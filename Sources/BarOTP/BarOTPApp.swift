@@ -93,7 +93,6 @@ struct MainView: View {
                 Image(nsImage: MenuMascot.asset("Patamon") ?? NSImage()).resizable().interpolation(.none).scaledToFit().frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("PadakKey").font(.headline)
-                    Text("인증 코드, 바로 여기.").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button { addAccount() } label: { Image(systemName: "plus") }.buttonStyle(.bordered).help("계정 추가")
