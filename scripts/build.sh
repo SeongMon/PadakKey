@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-0.1.6}"
+VERSION="${VERSION:-0.1.7}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION must be x.y.z'; exit 1; }
 ARCH="${ARCH:-universal}"
 # Sign outside cloud/file-provider folders, which may inject Finder metadata.
@@ -26,6 +26,7 @@ else
   BIN="$(swift build "${BUILD_FLAGS[@]}" -c release --show-bin-path)/BarOTP"
   cp "$BIN" "$APP/Contents/MacOS/BarOTP"
 fi
+cp Sources/BarOTP/Resources/*.png "$APP/Contents/Resources/"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

@@ -18,6 +18,7 @@ import OTPCore
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let vault = Vault()
     private let registration = RegistrationWindow()
+    private let mascot = MenuMascot()
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -28,16 +29,16 @@ import OTPCore
             return
         }
         // App-level ownership keeps the status item and registration window alive.
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "BarOTP")
-        item.button?.toolTip = "BarOTP 0.1.6"
+        let item = NSStatusBar.system.statusItem(withLength: 28)
+        mascot.attach(to: item.button)
+        item.button?.toolTip = "BarOTP 0.1.7"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
         popover.delegate = self
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 370, height: 280)
-        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, resize: { [weak self] height in
+        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, mascot: mascot, registration: registration, resize: { [weak self] height in
             self?.popover.contentSize = NSSize(width: 370, height: height)
         }, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
             guard let self else { return }
@@ -68,6 +69,7 @@ import OTPCore
 
 struct MainView: View {
     @ObservedObject var vault: Vault
+    @ObservedObject var mascot: MenuMascot
     @ObservedObject var registration: RegistrationWindow
     var resize: (CGFloat) -> Void
     private var visibleAccounts: [OTPAccount] {
@@ -88,7 +90,7 @@ struct MainView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "lock.shield.fill").font(.title2).foregroundStyle(.teal)
+                Image(nsImage: MenuMascot.asset("Patamon") ?? NSImage()).resizable().interpolation(.none).scaledToFit().frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("BarOTP").font(.headline)
                     Text("인증 코드, 바로 여기.").font(.caption).foregroundStyle(.secondary)
@@ -140,6 +142,8 @@ struct MainView: View {
             Divider()
             HStack {
                 Menu {
+                    Toggle("귀 애니메이션", isOn: $mascot.enabled)
+                    Divider()
                     Toggle("로그인 시 실행", isOn: Binding(get: { loginEnabled }, set: { enabled in
                         do {
                             if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
