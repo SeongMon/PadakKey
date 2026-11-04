@@ -9,23 +9,68 @@ import OTPCore
     @Published var loaded = false
     private let service = "app.barotp.local.v1"
     private var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "accounts"] }
-    func load() {
-        loaded = false
-        var request = query
-        request[kSecReturnData as String] = true
-        request[kSecMatchLimit as String] = kSecMatchLimitOne
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(request as CFDictionary, &result)
-        do {
-            if status == errSecItemNotFound { accounts = [] }
-            else {
-                guard status == errSecSuccess, let data = result as? Data else { throw failure(status) }
-                let decoded = try JSONDecoder().decode([OTPAccount].self, from: data)
-                for account in decoded { _ = try account.code() }
-                accounts = decoded
+    @Published var isLoading = false
+    @Published var needsAuthorization = false
+    private var generation = 0
+    typealias Reader = (Bool) -> (OSStatus, Data?)
+    private let reader: Reader
+    init(reader: Reader? = nil) {
+        self.reader = reader ?? { interactive in
+            var request: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: "app.barotp.local.v1",
+                kSecAttrAccount as String: "accounts",
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne
+            ]
+            if !interactive { request[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
+            var result: CFTypeRef?
+            let status = SecItemCopyMatching(request as CFDictionary, &result)
+            return (status, result as? Data)
+        }
+    }
+    func clear() {
+        generation += 1
+        accounts = []; loaded = false; isLoading = false
+        error = nil; needsAuthorization = false
+    }
+    // Automatic opens never display a system password dialog. Only an explicit
+    // authorization button may request interactive Keychain access.
+    func load(allowInteraction: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        guard !isLoading else { completion?(false); return }
+        generation += 1
+        let requestID = generation
+        let read = reader
+        loaded = false; accounts = []; error = nil
+        needsAuthorization = false; isLoading = true
+        DispatchQueue.global(qos: .userInitiated).async {
+            let (status, data) = read(allowInteraction)
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { completion?(false); return }
+                guard self.generation == requestID else { completion?(false); return }
+                self.isLoading = false
+                if [errSecUserCanceled, errSecAuthFailed, errSecInteractionNotAllowed, errSecInteractionRequired].contains(status) {
+                    self.needsAuthorization = true
+                    completion?(false)
+                    return
+                }
+                do {
+                    if status == errSecItemNotFound { self.accounts = [] }
+                    else {
+                        guard status == errSecSuccess, let data else { throw self.failure(status) }
+                        let decoded = try JSONDecoder().decode([OTPAccount].self, from: data)
+                        for account in decoded { _ = try account.code() }
+                        self.accounts = decoded
+                    }
+                    self.loaded = true
+                    completion?(true)
+                } catch {
+                    self.accounts = []
+                    self.error = error.localizedDescription
+                    completion?(false)
+                }
             }
-            loaded = true; error = nil
-        } catch { accounts = []; self.error = error.localizedDescription }
+        }
     }
     func add(_ account: OTPAccount) throws {
         guard loaded else { throw OTPError.invalid("키체인을 먼저 열어주세요.") }

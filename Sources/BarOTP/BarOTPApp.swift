@@ -30,13 +30,13 @@ import OTPCore
         // App-level ownership keeps the status item and registration window alive.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "BarOTP")
-        item.button?.toolTip = "BarOTP 0.1.3"
+        item.button?.toolTip = "BarOTP 0.1.4"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
         popover.delegate = self
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, addAccount: { [weak self] in
+        popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
             guard let self else { return }
             self.popover.performClose(nil)
             // Let the popover finish its close event before activating the window.
@@ -52,9 +52,13 @@ import OTPCore
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
     }
-    func popoverDidClose(_ notification: Notification) {
-        vault.accounts = []; vault.loaded = false
+    private func authorizeKeychain() {
+        guard !vault.isLoading else { return }
+        // Keep the parent popover alive while SecurityAgent owns focus.
+        popover.behavior = .applicationDefined
+        vault.load(allowInteraction: true) { [weak self] _ in self?.popover.behavior = .transient }
     }
+    func popoverDidClose(_ notification: Notification) { vault.clear() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationWillTerminate(_ notification: Notification) { Clipboard.shared.clear() }
 }
@@ -62,6 +66,7 @@ import OTPCore
 struct MainView: View {
     @ObservedObject var vault: Vault
     @ObservedObject var registration: RegistrationWindow
+    var authorize: () -> Void
     var addAccount: () -> Void
     @State private var search = ""
     @State private var copied: UUID?
@@ -84,7 +89,16 @@ struct MainView: View {
                     Text(error).font(.caption).foregroundStyle(.red).padding()
                     Button("키체인 다시 열기") { vault.load() }.padding(.bottom)
                 }
-                if !vault.loaded && vault.error == nil {
+                if vault.needsAuthorization {
+                    VStack(spacing: 10) {
+                        Image(systemName: "lock.shield").font(.title).foregroundStyle(.teal)
+                        Text("저장된 계정을 열려면 접근 허용이 필요합니다.")
+                        Text("macOS 창에서 Mac 로그인 암호를 입력하고 ‘항상 허용’을 선택하세요.")
+                            .font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        Button("접근 허용") { authorize() }.buttonStyle(.borderedProminent).tint(.teal)
+                    }.padding(22)
+                }
+                if vault.isLoading {
                     ProgressView("인증 코드 불러오는 중…").padding(30)
                 }
                 if vault.loaded && vault.accounts.isEmpty {
@@ -135,7 +149,7 @@ struct MainView: View {
             Button("삭제", role: .destructive) { if let account = deleting { vault.remove(account) }; deleting = nil }
         } message: { Text("이 Mac에서만 삭제됩니다. 다른 인증 수단이나 복구 코드가 있는지 확인하세요.") }
     }
-    private func clearSession() { registration.close(); vault.accounts = []; vault.loaded = false; Clipboard.shared.clear() }
+    private func clearSession() { registration.close(); vault.clear(); Clipboard.shared.clear() }
     private func accountRow(_ account: OTPAccount, at date: Date) -> some View {
         let code = try? account.code(at: date)
         let remaining = account.period - Int(date.timeIntervalSince1970) % account.period
@@ -212,11 +226,20 @@ struct AddView: View {
                     let account: OTPAccount
                     if mode == 0 { account = try OTPAccount.parse(uri) }
                     else { guard let seconds = Int(period) else { throw OTPError.invalid("갱신 주기를 숫자로 입력하세요.") }; account = try OTPAccount(issuer: issuer, name: name, secret: secret, algorithm: algorithm, digits: digits, period: seconds) }
-                    if !vault.loaded { vault.load() }
-                    try vault.add(account); uri = ""; secret = ""; done()
+                    if vault.loaded { save(account) }
+                    else {
+                        vault.load(allowInteraction: true) { success in
+                            if success { save(account) }
+                            else { error = vault.error ?? "저장된 계정을 열 수 없습니다. 키체인 접근을 허용한 뒤 다시 저장하세요." }
+                        }
+                    }
                 } catch { self.error = error.localizedDescription }
-            }.buttonStyle(.borderedProminent).tint(.teal).disabled(isReading)
+            }.buttonStyle(.borderedProminent).tint(.teal).disabled(isReading || vault.isLoading)
         }.textFieldStyle(.roundedBorder).padding(22).frame(width: 410)
+    }
+    private func save(_ account: OTPAccount) {
+        do { try vault.add(account); uri = ""; secret = ""; done() }
+        catch { self.error = error.localizedDescription }
     }
     private func importQR() {
         chooseImage { url in

@@ -18,6 +18,14 @@
 
 Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수 있습니다. 기존 앱의 계정에 자동 접근하거나 동기화하지 않습니다. Microsoft 푸시 승인, HOTP, Steam 특수 코드 및 Google Authenticator 일괄 이전(`otpauth-migration`) QR은 지원하지 않습니다.
 
+## 0.1.4 수정
+
+- 자동 조회는 암호창을 띄우지 않으며, 접근 승인이 필요할 때만 ‘접근 허용’을 표시합니다.
+- 접근 취소·거절은 빨간 오류 대신 권한 안내로 표시하고, 인증 요청 중복 및 닫힌 화면으로의 늦은 응답을 차단합니다.
+- 키체인 읽기는 백그라운드에서 수행합니다. 저장된 키의 접근 제어는 변경하지 않습니다.
+- ad-hoc 빌드의 업데이트 후 재승인은 macOS가 요구할 수 있습니다. 이를 없애려면 일관된 정식 서명으로 배포해야 합니다.
+- `bash scripts/verify-vault.sh`는 실제 사용자 키체인에 접근하지 않고 상태 전환을 검증합니다.
+
 ## 0.1.3 수정
 
 - 메뉴 막대 클릭마다 저장된 계정을 자동으로 불러와 OTP 목록을 즉시 표시합니다. 별도 ‘인증 코드 열기’ 단계가 없습니다.
@@ -66,7 +74,7 @@ Command Line Tools만 설치되어 XCTest가 없으면 `bash scripts/verify-core
 
 ## GitHub 배포
 
-이 폴더를 저장소 루트로 업로드합니다. `main` push 및 PR에서 테스트와 Universal 빌드가 실행됩니다. `v0.1.3`처럼 버전 태그를 push하면 ZIP과 SHA-256 체크섬이 첨부된 **초안 Release**를 만듭니다. 확인 후 GitHub에서 게시하세요.
+이 폴더를 저장소 루트로 업로드합니다. `main` push 및 PR에서 테스트와 Universal 빌드가 실행됩니다. `v0.1.4`처럼 버전 태그를 push하면 ZIP과 SHA-256 체크섬이 첨부된 **초안 Release**를 만듭니다. 확인 후 GitHub에서 게시하세요.
 
 ```sh
 git init -b main
@@ -74,8 +82,8 @@ git add .
 git commit -m "Build BarOTP menu bar authenticator"
 git remote add origin https://github.com/SeongMon/BarOTP.git
 git push -u origin main
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 기본 CI 산출물은 ad-hoc 서명이며 Apple Developer ID 서명·공증이 없습니다. 다운로드한 앱은 Gatekeeper가 차단할 수 있습니다. 출처와 체크섬을 확인한 사용자만 시스템 설정 → 개인정보 보호 및 보안에서 macOS가 제공하는 열기 절차를 이용하세요. Gatekeeper 전체를 비활성화하지 마세요.
@@ -83,7 +91,7 @@ git push origin v0.1.3
 일반 사용자 배포에는 Apple Developer ID 인증서와 공증을 권장합니다. 인증서를 로컬 키체인에 설치하고 `xcrun notarytool store-credentials`로 공증 프로필을 만든 뒤:
 
 ```sh
-VERSION=0.1.3 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NOTARY_PROFILE='barotp-notary' bash scripts/build.sh
+VERSION=0.1.4 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NOTARY_PROFILE='barotp-notary' bash scripts/build.sh
 ```
 
 이 명령은 hardened runtime 서명 → 공증 → staple → ZIP 재생성까지 수행합니다. 생성된 ZIP/체크섬으로 초안 Release의 파일을 교체하고 게시하세요. 인증서·암호·API 키는 저장소에 올리지 마세요. CI 서명 자동화는 조직의 GitHub Secrets와 인증서 정책에 맞춰 별도로 연결해야 합니다.
