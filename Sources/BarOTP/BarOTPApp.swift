@@ -30,12 +30,13 @@ import OTPCore
         // App-level ownership keeps the status item and registration window alive.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "BarOTP")
-        item.button?.toolTip = "BarOTP 0.1.4"
+        item.button?.toolTip = "BarOTP 0.1.5"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
         popover.delegate = self
         popover.behavior = .transient
+        popover.contentSize = NSSize(width: 370, height: 420)
         popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, registration: registration, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
             guard let self else { return }
             self.popover.performClose(nil)
@@ -82,9 +83,9 @@ struct MainView: View {
                 }
                 Spacer()
                 Button { addAccount() } label: { Image(systemName: "plus") }.buttonStyle(.bordered).help("계정 추가")
-            }.padding(20)
+            }.padding(20).fixedSize(horizontal: false, vertical: true)
             Divider()
-            Group {
+            VStack(spacing: 0) {
                 if let error = vault.error {
                     Text(error).font(.caption).foregroundStyle(.red).padding()
                     Button("키체인 다시 열기") { vault.load() }.padding(.bottom)
@@ -118,9 +119,9 @@ struct MainView: View {
                                 }
                             }
                         }.padding(.horizontal, 14).padding(.bottom, 14)
-                    }.frame(maxHeight: 360)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-            }
+            }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             Divider()
             HStack {
                 Menu {
@@ -136,8 +137,8 @@ struct MainView: View {
                 } label: { Image(systemName: "gearshape") }.menuStyle(.borderlessButton).frame(width: 30)
                 Spacer()
                 Text("로컬 키체인 저장 · 복사 후 30초 뒤 지움").font(.system(size: 10)).foregroundStyle(.secondary)
-            }.padding(12)
-        }.frame(width: 370)
+            }.padding(12).fixedSize(horizontal: false, vertical: true)
+        }.frame(width: 370, height: 420)
         .onAppear { loginEnabled = SMAppService.mainApp.status == .enabled }
         .onChange(of: vault.loaded) { loaded in if loaded { search = ""; copied = nil } }
         .onDisappear { copied = nil }
