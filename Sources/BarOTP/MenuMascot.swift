@@ -61,7 +61,7 @@ import SwiftUI
     }
     // Only the upper (ear) region changes. The body always uses the approved art.
     private static func render(flapping: Bool) -> NSImage? {
-        guard let base = asset("Patamon") else { return NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "파닥키") }
+        guard let base = asset("Patamon") else { return NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "PadakKey") }
         let alternate = flapping ? asset("PatamonFlap") : nil
         let size = NSSize(width: 22, height: 22)
         let image = NSImage(size: size, flipped: false) { rect in
@@ -82,7 +82,7 @@ import SwiftUI
             return true
         }
         image.isTemplate = false
-        image.accessibilityDescription = "파닥키"
+        image.accessibilityDescription = "PadakKey"
         return image
     }
 }

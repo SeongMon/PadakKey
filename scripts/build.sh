@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-0.1.8}"
+VERSION="${VERSION:-0.1.9}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION must be x.y.z'; exit 1; }
 ARCH="${ARCH:-universal}"
 # Sign outside cloud/file-provider folders, which may inject Finder metadata.
 STAGING="$(mktemp -d "${TMPDIR:-/tmp}/barotp-build.XXXXXX")"
 trap 'rm -rf "$STAGING"' EXIT
-APP="$STAGING/파닥키.app"
+APP="$STAGING/PadakKey.app"
 mkdir -p "$PWD/dist"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 export CLANG_MODULE_CACHE_PATH="$PWD/.build/clang-cache"
@@ -33,8 +33,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>BarOTP</string>
 <key>CFBundleIdentifier</key><string>app.barotp.mac</string>
-<key>CFBundleName</key><string>파닥키</string>
-<key>CFBundleDisplayName</key><string>파닥키</string>
+<key>CFBundleName</key><string>PadakKey</string>
+<key>CFBundleDisplayName</key><string>PadakKey</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>CFBundleVersion</key><string>$VERSION</string>
@@ -62,5 +62,5 @@ if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
 fi
 (cd dist && shasum -a 256 "$(basename "$ZIP")" > "$(basename "$ZIP").sha256")
-ditto "$APP" "$PWD/dist/파닥키.app"
+ditto "$APP" "$PWD/dist/PadakKey.app"
 echo "$ZIP"

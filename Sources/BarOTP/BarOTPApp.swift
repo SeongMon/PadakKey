@@ -31,7 +31,7 @@ import OTPCore
         // App-level ownership keeps the status item and registration window alive.
         let item = NSStatusBar.system.statusItem(withLength: 28)
         mascot.attach(to: item.button)
-        item.button?.toolTip = "파닥키 0.1.8"
+        item.button?.toolTip = "PadakKey 0.1.9"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -92,7 +92,7 @@ struct MainView: View {
             HStack(spacing: 10) {
                 Image(nsImage: MenuMascot.asset("Patamon") ?? NSImage()).resizable().interpolation(.none).scaledToFit().frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("파닥키").font(.headline)
+                    Text("PadakKey").font(.headline)
                     Text("인증 코드, 바로 여기.").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -288,7 +288,7 @@ struct AddView: View {
     func show(vault: Vault) {
         if let window { NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil); return }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 454, height: 360), styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "파닥키 · 계정 추가"
+        window.title = "PadakKey · 계정 추가"
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.contentView = NSHostingView(rootView: AddView(vault: vault, done: { [weak self] in self?.close() }, chooseImage: { [weak self] completion in self?.chooseImage(completion) }))
