@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-0.1.9}"
+VERSION="${VERSION:-0.1.13}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION must be x.y.z'; exit 1; }
 ARCH="${ARCH:-universal}"
 # Sign outside cloud/file-provider folders, which may inject Finder metadata.
@@ -44,9 +44,21 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </dict></plist>
 PLIST
 xattr -cr "$APP"
+LOCAL_SIGNING_IDENTITY=""
+if [[ -z "${SIGNING_IDENTITY:-}" && "${CI:-false}" != true ]]; then
+  LOCAL_SIGNING_IDENTITY="$(security find-certificate -c 'PadakKey Local Development' -Z 2>/dev/null | awk '/SHA-1 hash:/ {print $3; exit}' || true)"
+fi
 if [[ -n "${SIGNING_IDENTITY:-}" ]]; then
   codesign --force --options runtime --timestamp --sign "$SIGNING_IDENTITY" "$APP"
+elif [[ -n "$LOCAL_SIGNING_IDENTITY" ]]; then
+  # The same certificate yields a stable designated requirement across builds.
+  codesign --force --timestamp=none --sign "$LOCAL_SIGNING_IDENTITY" "$APP"
 else
+  if [[ "${CI:-false}" != true && "${ALLOW_ADHOC_SIGNING:-0}" != 1 ]]; then
+    echo 'No persistent signing identity available. Run bash scripts/setup-local-signing.sh, or provide SIGNING_IDENTITY. Refusing an accidental switch back to ad-hoc signing.' >&2
+    exit 1
+  fi
+  echo 'WARNING: ad-hoc signing: updates may require Keychain authorization again. For local builds run scripts/setup-local-signing.sh; public releases should use SIGNING_IDENTITY.' >&2
   codesign --force --sign - "$APP"
 fi
 codesign --verify --deep --strict "$APP"
@@ -62,5 +74,6 @@ if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
 fi
 (cd dist && shasum -a 256 "$(basename "$ZIP")" > "$(basename "$ZIP").sha256")
+rm -rf "$PWD/dist/PadakKey.app"
 ditto "$APP" "$PWD/dist/PadakKey.app"
 echo "$ZIP"

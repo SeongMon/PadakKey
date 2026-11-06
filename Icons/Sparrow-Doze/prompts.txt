@@ -1,0 +1,8 @@
+Tool: built-in image_gen
+Awake frame: exact user-provided patterned sparrow image.
+
+Closed eye frame:
+Use case: precise-object-edit. Edit target is this EXACT patterned gray pixel sparrow, for a sprite animation. Create the eyes-closed frame: change ONLY the black round open eye with white glint into a small black closed eyelid, a shallow U of chunky square pixels, filling the rest of original eye area with matching pale cheek. Everything else must remain identical: exact black crown marking, black triangular throat bib, TWO black wing stripes and black wing outline, tail, feet, head silhouette, body, scale, position, original colors and pixel grid. No cheek dot. Do NOT replace this with an unpatterned sleepy bird. No movement yet. Same square canvas, genuine transparent background, no text. Single bird.
+
+Nodding frame:
+undefined

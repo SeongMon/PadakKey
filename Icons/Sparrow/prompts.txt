@@ -1,0 +1,7 @@
+Built-in image_gen tool; generated frames packaged using Apple ImageIO.
+
+IDLE
+Use case: precise-object-edit. Edit target: attached gray pixel sparrow icon. Remove ONLY the black square cheek spot below/right of its eye, replacing it with the surrounding pale gray cheek color. Preserve the black eye with white glint, black throat bib, crown stripe, two black wing bars, silhouette, position, scale, pixel grid, all other colors exactly. This is the resting frame for a tiny menu bar icon animation. Single sparrow, same square canvas, genuinely transparent background, no text.
+
+FLAP
+Use case: precise-object-edit. Input image is the exact edit target and idle animation frame. Create the wings-UP frame for the same tiny gray pixel sparrow. Change ONLY the visible folded wing on the right side of its body: lift and extend that wing diagonally upward toward the upper right, keeping its black feather bars and gray fill. Expose pale belly where folded wing was. Keep head, eye, cheek WITHOUT any spot, beak, crown, throat bib, feet, belly silhouette, tail and their exact pixel positions, scale, palette and grid unchanged. No body bounce, no face changes, no new objects. Same 1280 square canvas and transparent background. Single bird, pixel art, no labels. The wing must fit within canvas; bird itself must not be repositioned or resized.

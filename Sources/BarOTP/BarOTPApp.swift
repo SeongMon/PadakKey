@@ -29,9 +29,11 @@ import OTPCore
             return
         }
         // App-level ownership keeps the status item and registration window alive.
-        let item = NSStatusBar.system.statusItem(withLength: 28)
+        let item = NSStatusBar.system.statusItem(withLength: 24)
+        item.autosaveName = "PadakKey.MainStatusItem"
+        item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.9"
+        item.button?.toolTip = "PadakKey 0.1.13"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -40,7 +42,13 @@ import OTPCore
         popover.contentSize = NSSize(width: 370, height: 280)
         popover.contentViewController = NSHostingController(rootView: MainView(vault: vault, mascot: mascot, registration: registration, resize: { [weak self] height in
             self?.popover.contentSize = NSSize(width: 370, height: height)
-        }, authorize: { [weak self] in self?.authorizeKeychain() }, addAccount: { [weak self] in
+        }, importIcon: { [weak self] in
+            guard let self else { return }
+            self.popover.performClose(nil)
+            DispatchQueue.main.async { self.mascot.importIcon() }
+        }, authorize: { [weak self] in self?.authorizeKeychain() }, closeAfterCopy: { [weak self] in
+            self?.popover.performClose(nil)
+        }, addAccount: { [weak self] in
             guard let self else { return }
             self.popover.performClose(nil)
             // Let the popover finish its close event before activating the window.
@@ -72,6 +80,7 @@ struct MainView: View {
     @ObservedObject var mascot: MenuMascot
     @ObservedObject var registration: RegistrationWindow
     var resize: (CGFloat) -> Void
+    var importIcon: () -> Void
     private var visibleAccounts: [OTPAccount] {
         vault.accounts.filter { search.isEmpty || ($0.issuer + " " + $0.name).localizedCaseInsensitiveContains(search) }
     }
@@ -82,6 +91,7 @@ struct MainView: View {
         return 168 + CGFloat(min(3, max(1, visibleAccounts.count))) * 112
     }
     var authorize: () -> Void
+    var closeAfterCopy: () -> Void
     var addAccount: () -> Void
     @State private var search = ""
     @State private var copied: UUID?
@@ -90,7 +100,7 @@ struct MainView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(nsImage: MenuMascot.asset("Patamon") ?? NSImage()).resizable().interpolation(.none).scaledToFit().frame(width: 32, height: 32)
+                Image(nsImage: mascot.preview).resizable().interpolation(.none).scaledToFit().frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("PadakKey").font(.headline)
                 }
@@ -141,7 +151,15 @@ struct MainView: View {
             Divider()
             HStack {
                 Menu {
-                    Toggle("귀 애니메이션", isOn: $mascot.enabled)
+                    Toggle("애니메이션", isOn: $mascot.enabled)
+                    Menu("아이콘 선택") {
+                        Picker("기본 아이콘", selection: $mascot.selected) {
+                            ForEach(MenuMascot.builtins) { choice in Text(choice.name).tag(choice.id) }
+                            ForEach(mascot.customs) { choice in Text(choice.name).tag(choice.id) }
+                        }.pickerStyle(.inline)
+                    }
+                    Button("아이콘 추가…") { importIcon() }
+                    Button("아이콘 폴더 열기") { mascot.openIconFolder() }
                     Divider()
                     Toggle("로그인 시 실행", isOn: Binding(get: { loginEnabled }, set: { enabled in
                         do {
@@ -157,7 +175,7 @@ struct MainView: View {
                 Text("로컬 키체인 저장 · 복사 후 30초 뒤 지움").font(.system(size: 10)).foregroundStyle(.secondary)
             }.padding(12).fixedSize(horizontal: false, vertical: true)
         }.frame(width: 370, height: panelHeight)
-        .onAppear { loginEnabled = SMAppService.mainApp.status == .enabled; resize(panelHeight) }
+        .onAppear { mascot.refreshCustoms(); loginEnabled = SMAppService.mainApp.status == .enabled; resize(panelHeight) }
         .onChange(of: panelHeight) { height in resize(height) }
         .onChange(of: vault.loaded) { loaded in if loaded { search = ""; copied = nil } }
         .onDisappear { copied = nil }
@@ -184,7 +202,10 @@ struct MainView: View {
             }
             HStack {
                 Button {
-                    if let current = try? account.code() { Clipboard.shared.copy(current); copied = account.id }
+                    if let current = try? account.code() {
+                        Clipboard.shared.copy(current)
+                        closeAfterCopy()
+                    }
                 } label: {
                     HStack(spacing: 10) {
                         Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류").font(.system(size: 29, weight: .medium, design: .monospaced))

@@ -12,6 +12,7 @@ jobs:
       - run: swift test
       - run: bash scripts/verify-qr.sh
       - run: bash scripts/verify-vault.sh
+      - run: bash scripts/verify-mascot.sh
       - name: Build universal app
         env:
           RELEASE_TAG: ${{ github.ref_name }}
