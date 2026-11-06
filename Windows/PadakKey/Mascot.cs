@@ -23,12 +23,12 @@ internal sealed class Mascot : IDisposable
                 var sequence = settings.Icon == "flutter"
                     ? new[] { ("SparrowIdle", 3000), ("SparrowFlap", 140), ("SparrowIdle", 140), ("SparrowFlap", 140), ("SparrowIdle", 140), ("SparrowFlap", 140) }
                     : new[] { ("SparrowIdle", 3000), ("SparrowClosed", 500), ("SparrowNod", 1000), ("SparrowClosed", 400), ("SparrowNod", 800), ("SparrowClosed", 300) };
-                foreach (var (name, delay) in sequence) { using var image = Image.FromFile(Path.Combine(AppContext.BaseDirectory, "Assets", name + ".png")); frames.Add((Render(image, true, settings.IconSize), delay)); }
+                foreach (var (name, delay) in sequence) { using var image = Image.FromFile(Path.Combine(AppContext.BaseDirectory, "Assets", name + ".png")); frames.Add((Render(image, true, settings.IconSize, settings.IconZoom), delay)); }
             }
             else
             {
                 if (Path.GetFileName(settings.Icon) != settings.Icon) throw new FormatException("아이콘 경로가 올바르지 않습니다.");
-                frames.AddRange(ReadCustom(Path.Combine(Folder, settings.Icon), settings.IconSize));
+                frames.AddRange(ReadCustom(Path.Combine(Folder, settings.Icon), settings.IconSize, settings.IconZoom));
             }
             tray.Icon = frames[0].Icon;
             if (settings.Animation && frames.Count > 1) { timer.Interval = frames[0].Delay; timer.Start(); }
@@ -39,7 +39,7 @@ internal sealed class Mascot : IDisposable
             if (settings.Icon != "flutter") { settings.Icon = "flutter"; Reload(); }
         }
     }
-    internal static List<(Icon Icon, int Delay)> ReadCustom(string file, int size = 100)
+    internal static List<(Icon Icon, int Delay)> ReadCustom(string file, int size = 100, int zoom = 100)
     {
         if (!new[] { ".png", ".gif" }.Contains(Path.GetExtension(file).ToLowerInvariant()) || new FileInfo(file).Length > 10 * 1024 * 1024) throw new FormatException("10MB 이하의 PNG 또는 GIF를 선택하세요.");
         using var image = Image.FromFile(file);
@@ -53,18 +53,18 @@ internal sealed class Mascot : IDisposable
             {
                 if (count > 1) image.SelectActiveFrame(FrameDimension.Time, i);
                 int delay = delays != null && delays.Length >= (i + 1) * 4 ? (int)Math.Clamp((long)BitConverter.ToInt32(delays, i * 4) * 10, 60, 10000) : 100;
-                result.Add((Render(image, false, size), delay));
+                result.Add((Render(image, false, size, zoom), delay));
             }
             return result;
         }
         catch { foreach (var (icon, _) in result) icon.Dispose(); throw; }
     }
-    private static Icon Render(Image image, bool builtin, int size)
+    private static Icon Render(Image image, bool builtin, int size, int zoom)
     {
         using var bitmap = new Bitmap(32, 32); using var graphics = Graphics.FromImage(bitmap);
         graphics.InterpolationMode = InterpolationMode.NearestNeighbor; graphics.PixelOffsetMode = PixelOffsetMode.Half;
         var source = builtin ? new RectangleF(image.Width * .13f, image.Height * .13f, image.Width * .75f, image.Height * .75f) : new RectangleF(0, 0, image.Width, image.Height);
-        float scale = Math.Min(32 / source.Width, 32 / source.Height) * Math.Clamp(size, 60, 100) / 100f;
+        float scale = Math.Min(32 / source.Width, 32 / source.Height) * Math.Clamp(size, 60, 100) / 100f * Math.Clamp(zoom, 100, 200) / 100f;
         graphics.DrawImage(image, new RectangleF((32 - source.Width * scale) / 2, (32 - source.Height * scale) / 2, source.Width * scale, source.Height * scale), source, GraphicsUnit.Pixel);
         IntPtr handle = bitmap.GetHicon();
         try { using var icon = Icon.FromHandle(handle); return (Icon)icon.Clone(); } finally { DestroyIcon(handle); }

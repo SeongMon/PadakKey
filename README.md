@@ -144,3 +144,5 @@ VERSION=0.1.4 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NO
 Windows 트레이 버전의 실행 방법, CI 다운로드, 실제 기기 검사 목록은 [Windows/README.md](Windows/README.md)를 참고하세요. 두 참새 모션, 애니메이션 ON/OFF, 아이콘 추가와 크기 조절을 제공합니다.
 
 Mac에서는 톱니바퀴 → **아이콘 크기**에서 16/20/22/24pt를 선택할 수 있습니다. 메뉴 막대 높이를 넘는 이미지는 macOS가 맞춰 표시합니다.
+
+아이콘 원본의 여백 때문에 작게 보이면 Mac/Windows의 **아이콘 확대 (여백 줄이기)**에서 100~200%를 선택하세요. 트레이 칸 안에서 이미지를 확대하므로 높은 배율에서는 가장자리가 잘릴 수 있습니다. 기본 크기와 확대 설정은 각각 저장됩니다.

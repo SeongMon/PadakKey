@@ -10,6 +10,9 @@ import UniformTypeIdentifiers
     @Published var enabled: Bool {
         didSet { defaults.set(enabled, forKey: "animationEnabled"); resetAnimation() }
     }
+    @Published var iconZoom: Int {
+        didSet { defaults.set(iconZoom, forKey: "iconZoom"); loadSelection() }
+    }
     @Published var iconSize: Int {
         didSet { defaults.set(iconSize, forKey: "iconSize"); loadSelection() }
     }
@@ -37,6 +40,8 @@ import UniformTypeIdentifiers
         self.directory = directory
         enabled = defaults.object(forKey: "animationEnabled") as? Bool
             ?? defaults.object(forKey: "earAnimationEnabled") as? Bool ?? true
+        let savedZoom = defaults.integer(forKey: "iconZoom")
+        iconZoom = [100, 125, 150, 175, 200].contains(savedZoom) ? savedZoom : 100
         let savedSize = defaults.integer(forKey: "iconSize")
         iconSize = [16, 20, 22, 24].contains(savedSize) ? savedSize : 24
         selected = defaults.string(forKey: "selectedIcon") ?? "sparrow-flutter"
@@ -112,12 +117,12 @@ import UniformTypeIdentifiers
                 ? [("SparrowIdle", 3), ("SparrowFlap", 0.14), ("SparrowIdle", 0.14), ("SparrowFlap", 0.14), ("SparrowIdle", 0.14), ("SparrowFlap", 0.14), ("SparrowIdle", 0.3)]
                 : [("SparrowIdle", 3), ("SparrowClosed", 0.5), ("SparrowNod", 1), ("SparrowClosed", 0.4), ("SparrowNod", 0.8), ("SparrowClosed", 0.3)]
             frames = names.compactMap { name, duration in
-                Self.asset(name).map { Frame(image: Self.render($0, builtin: true, size: iconSize), duration: duration) }
+                Self.asset(name).map { Frame(image: Self.render($0, builtin: true, size: iconSize, zoom: iconZoom), duration: duration) }
             }
         } else {
             do {
                 guard customs.contains(where: { $0.id == selected }) else { throw IconError.invalid }
-                frames = try Self.readCustom(directory.appendingPathComponent(selected), size: iconSize)
+                frames = try Self.readCustom(directory.appendingPathComponent(selected), size: iconSize, zoom: iconZoom)
             } catch {
                 showError(error.localizedDescription)
                 selected = "sparrow-flutter"
@@ -171,7 +176,7 @@ import UniformTypeIdentifiers
             }
         }
     }
-    static func readCustom(_ url: URL, size: Int = 22) throws -> [Frame] {
+    static func readCustom(_ url: URL, size: Int = 22, zoom: Int = 100) throws -> [Frame] {
         guard ["png", "gif"].contains(url.pathExtension.lowercased()) else { throw IconError.invalid }
         let bytes = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
         guard bytes > 0, bytes <= 10 * 1024 * 1024 else { throw IconError.tooLarge }
@@ -195,12 +200,12 @@ import UniformTypeIdentifiers
             let gif = props?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
             let delay = gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double ?? gif?[kCGImagePropertyGIFDelayTime] as? Double ?? 0.1
             // Rasterize each frame once: NSImage must never animate itself while OFF.
-            let image = render(NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height)), builtin: false, size: size)
+            let image = render(NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height)), builtin: false, size: size, zoom: zoom)
             result.append(Frame(image: image, duration: max(0.06, min(10, delay.isFinite ? delay : 0.1))))
         }
         return result
     }
-    private static func render(_ source: NSImage, builtin: Bool, size pixels: Int) -> NSImage {
+    private static func render(_ source: NSImage, builtin: Bool, size pixels: Int, zoom: Int = 100) -> NSImage {
         let size = NSSize(width: pixels, height: pixels)
         let image = NSImage(size: size)
         image.lockFocus()
@@ -208,7 +213,7 @@ import UniformTypeIdentifiers
         let crop = builtin
             ? NSRect(x: source.size.width * 0.13, y: source.size.height * 0.12, width: source.size.width * 0.75, height: source.size.height * 0.75)
             : NSRect(origin: .zero, size: source.size)
-        let scale = min(size.width / crop.width, size.height / crop.height)
+        let scale = min(size.width / crop.width, size.height / crop.height) * CGFloat(min(200, max(100, zoom))) / 100
         let target = NSRect(x: (size.width - crop.width * scale) / 2, y: (size.height - crop.height * scale) / 2, width: crop.width * scale, height: crop.height * scale)
         source.draw(in: target, from: crop, operation: .copy, fraction: 1)
         image.unlockFocus()

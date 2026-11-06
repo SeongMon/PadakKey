@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.14"
+        item.button?.toolTip = "PadakKey 0.1.15"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -160,6 +160,11 @@ struct MainView: View {
                     Menu("아이콘 크기") {
                         Picker("크기", selection: $mascot.iconSize) {
                             ForEach([16, 20, 22, 24], id: \.self) { size in Text("\(size) pt").tag(size) }
+                        }.pickerStyle(.inline)
+                    }
+                    Menu("아이콘 확대 (여백 줄이기)") {
+                        Picker("확대", selection: $mascot.iconZoom) {
+                            ForEach([100, 125, 150, 175, 200], id: \.self) { zoom in Text("\(zoom)%").tag(zoom) }
                         }.pickerStyle(.inline)
                     }
                     Menu("아이콘 선택") {

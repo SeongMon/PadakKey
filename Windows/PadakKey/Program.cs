@@ -70,6 +70,9 @@ internal sealed class TrayApp : ApplicationContext
         var sizes = new ToolStripMenuItem("아이콘 크기");
         foreach (int size in new[] { 60, 75, 90, 100 }) { var item = new ToolStripMenuItem($"{size}%" + (size == 100 ? " (최대)" : "")) { Checked = settings.IconSize == size, Tag = size }; item.Click += (_, _) => Change(() => settings.IconSize = size); sizes.DropDownItems.Add(item); }
         menu.Items.Add(sizes);
+        var zooms = new ToolStripMenuItem("아이콘 확대 (여백 줄이기)");
+        foreach (int zoom in new[] { 100, 125, 150, 175, 200 }) { var item = new ToolStripMenuItem($"{zoom}%") { Checked = settings.IconZoom == zoom, Tag = zoom }; item.Click += (_, _) => Change(() => settings.IconZoom = zoom); zooms.DropDownItems.Add(item); }
+        menu.Items.Add(zooms);
         menu.Items.Add("아이콘 추가…", null, (_, _) =>
         {
             popup.Hide(); using var dialog = new OpenFileDialog { Filter = "아이콘|*.png;*.gif" };
@@ -87,6 +90,7 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add("종료", null, (_, _) => ExitThread());
         menu.Opening += (_, _) => {
             animation.Checked = settings.Animation;
+            foreach (ToolStripMenuItem item in zooms.DropDownItems) item.Checked = (int?)item.Tag == settings.IconZoom;
             foreach (ToolStripMenuItem item in icons.DropDownItems) item.Checked = (string?)item.Tag == settings.Icon;
             foreach (ToolStripMenuItem item in sizes.DropDownItems) item.Checked = (int?)item.Tag == settings.IconSize;
         };
