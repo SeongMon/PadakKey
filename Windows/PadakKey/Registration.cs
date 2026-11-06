@@ -2,6 +2,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using PadakKey.Core;
 using ZXing;
+using FormatException = System.FormatException;
 namespace PadakKey;
 internal sealed class Registration : Form
 {

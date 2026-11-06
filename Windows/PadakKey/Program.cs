@@ -63,12 +63,12 @@ internal sealed class TrayApp : ApplicationContext
         var animation = new ToolStripMenuItem("애니메이션") { Checked = settings.Animation, CheckOnClick = true };
         animation.CheckedChanged += (_, _) => Change(() => settings.Animation = animation.Checked); menu.Items.Add(animation);
         var icons = new ToolStripMenuItem("아이콘 선택");
-        void Choice(string title, string id) { var item = new ToolStripMenuItem(title) { Checked = settings.Icon == id }; item.Click += (_, _) => Change(() => settings.Icon = id); icons.DropDownItems.Add(item); }
+        void Choice(string title, string id) { var item = new ToolStripMenuItem(title) { Checked = settings.Icon == id, Tag = id }; item.Click += (_, _) => Change(() => settings.Icon = id); icons.DropDownItems.Add(item); }
         Choice("파닥이는 참새", "flutter"); Choice("조는 참새", "doze"); Directory.CreateDirectory(Mascot.Folder);
         foreach (var file in Directory.GetFiles(Mascot.Folder).Where(p => new[] { ".png", ".gif" }.Contains(Path.GetExtension(p).ToLowerInvariant()))) Choice(Path.GetFileNameWithoutExtension(file), Path.GetFileName(file));
         menu.Items.Add(icons);
         var sizes = new ToolStripMenuItem("아이콘 크기");
-        foreach (int size in new[] { 60, 75, 90, 100 }) { var item = new ToolStripMenuItem($"{size}%" + (size == 100 ? " (최대)" : "")) { Checked = settings.IconSize == size }; item.Click += (_, _) => Change(() => settings.IconSize = size); sizes.DropDownItems.Add(item); }
+        foreach (int size in new[] { 60, 75, 90, 100 }) { var item = new ToolStripMenuItem($"{size}%" + (size == 100 ? " (최대)" : "")) { Checked = settings.IconSize == size, Tag = size }; item.Click += (_, _) => Change(() => settings.IconSize = size); sizes.DropDownItems.Add(item); }
         menu.Items.Add(sizes);
         menu.Items.Add("아이콘 추가…", null, (_, _) =>
         {
@@ -85,6 +85,11 @@ internal sealed class TrayApp : ApplicationContext
         });
         menu.Items.Add("아이콘 폴더 열기", null, (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Mascot.Folder) { UseShellExecute = true }));
         menu.Items.Add("종료", null, (_, _) => ExitThread());
+        menu.Opening += (_, _) => {
+            animation.Checked = settings.Animation;
+            foreach (ToolStripMenuItem item in icons.DropDownItems) item.Checked = (string?)item.Tag == settings.Icon;
+            foreach (ToolStripMenuItem item in sizes.DropDownItems) item.Checked = (int?)item.Tag == settings.IconSize;
+        };
         tray.ContextMenuStrip = menu; old?.Dispose();
     }
     private void Change(Action change) { change(); mascot.Reload(); try { settings.Save(); } catch { MessageBox.Show("설정을 저장할 수 없습니다."); } }

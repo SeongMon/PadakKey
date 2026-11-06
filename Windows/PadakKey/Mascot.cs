@@ -11,7 +11,7 @@ internal sealed class Mascot : IDisposable
     private int index;
     public static string Folder => Path.Combine(Storage.Root, "Icons");
     [DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr icon);
-    public Mascot(NotifyIcon tray, Settings settings) { this.tray = tray; this.settings = settings; timer.Tick += (_, _) => { index = (index + 1) % frames.Count; tray.Icon = frames[index].Icon; timer.Interval = frames[index].Delay; }; Reload(); }
+    public Mascot(NotifyIcon tray, Settings settings) { this.tray = tray; this.settings = settings; timer.Tick += (_, _) => { if (!settings.Animation || frames.Count < 2) return; index = (index + 1) % frames.Count; tray.Icon = frames[index].Icon; timer.Interval = frames[index].Delay; }; Reload(); }
     public void Reload()
     {
         timer.Stop(); tray.Icon = SystemIcons.Shield;
@@ -31,7 +31,7 @@ internal sealed class Mascot : IDisposable
                 frames.AddRange(ReadCustom(Path.Combine(Folder, settings.Icon), settings.IconSize));
             }
             tray.Icon = frames[0].Icon;
-            if (settings.Animation && frames.Count > 1 && SystemInformation.ClientAreaAnimation) { timer.Interval = frames[0].Delay; timer.Start(); }
+            if (settings.Animation && frames.Count > 1) { timer.Interval = frames[0].Delay; timer.Start(); }
         }
         catch
         {
