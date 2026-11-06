@@ -25,7 +25,15 @@ jobs:
           $p = Start-Process -FilePath Windows/PadakKey/bin/Release/net10.0-windows/PadakKey.exe -ArgumentList '--self-test' -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "Windows checks failed: $($p.ExitCode)" }
       - name: Build portable Windows x64 app
-        run: dotnet publish Windows/PadakKey -c Release -r win-x64 --self-contained true -o artifacts/PadakKey-Windows-x64
+        run: dotnet publish Windows/PadakKey -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o artifacts/PadakKey-Windows-x64
+      - name: Verify packaged app and clean layout
+        shell: pwsh
+        run: |
+          $root = 'artifacts/PadakKey-Windows-x64'
+          $unexpected = Get-ChildItem $root | Where-Object { $_.Name -notin @('PadakKey.exe', 'Assets') }
+          if ($unexpected) { throw "Unexpected top-level files: $($unexpected.Name -join ', ')" }
+          $p = Start-Process -FilePath "$root/PadakKey.exe" -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Packaged app checks failed: $($p.ExitCode)" }
       - uses: actions/upload-artifact@v4
         with:
           name: PadakKey-Windows-x64
