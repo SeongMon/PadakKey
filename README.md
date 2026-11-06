@@ -1,5 +1,21 @@
 # PadakKey
 
+## 다운로드
+
+운영체제에 맞는 파일을 선택하세요. [Mac · Windows 공개 미리보기 릴리스](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.15)
+
+| 운영체제 | 다운로드 | 실행 방법 |
+| --- | --- | --- |
+| macOS 13+ · Apple Silicon / Intel | [Mac용 ZIP](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.15/PadakKey-macOS-universal.zip) | 압축을 풀고 `PadakKey.app`을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows용 ZIP](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.15/PadakKey-Windows-x64.zip) | 압축을 모두 풀고 `PadakKey.exe` 실행. `Assets` 폴더를 옆에 유지 |
+
+Mac은 로컬 개발 인증서 서명이며 Apple 공증 전이고, Windows는 코드 서명 전인 미리보기입니다. 운영체제에서 게시자 확인 경고나 실행 제한이 나타날 수 있습니다. Windows 트레이 실제 사용 검증은 진행 중입니다.
+
+Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레이 칸 안에서 크기와 확대율을 조절합니다.
+
+소스 코드: [Mac](Sources/BarOTP) · [Windows](Windows) · [Windows 사용/검사 안내](Windows/README.md)
+
+
 ### 개발 빌드와 키체인 허용
 
 임시(ad-hoc) 서명은 빌드마다 앱 식별 요구사항이 바뀌므로 키체인의 ‘항상 허용’이 다음 빌드에 이어지지 않을 수 있습니다. 로컬 개발 시 `bash scripts/setup-local-signing.sh`를 한 번 실행하면 로그인 키체인에 전용 서명 인증서가 생성됩니다. 이후 로컬 빌드는 같은 인증서를 자동으로 사용합니다. 인증서를 삭제하거나 매번 새로 만들지 마세요. 전환 직후에는 기존 OTP 항목에 한 번 다시 접근을 허용해야 할 수 있습니다.

@@ -4,7 +4,7 @@ Windows 11 x64용 트레이 앱입니다. Windows 10은 현재 실제 기기 검
 
 ## 실행
 
-GitHub Actions의 **Windows build and checks** 성공 실행 → **PadakKey-Windows-x64** artifact를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
+[Windows 공개 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.15/PadakKey-Windows-x64.zip)를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
 
 오른쪽 아래 `^`에서 참새 아이콘을 클릭하면 OTP 창이 열립니다. 아이콘을 항상 표시할지는 Windows 설정에서 결정합니다. 숫자를 클릭하면 복사하고 창을 닫습니다. 30초 후 클립보드 내용이 다른 앱에 의해 바뀌지 않았을 때만 지웁니다.
 
