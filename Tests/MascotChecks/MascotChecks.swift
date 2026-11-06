@@ -17,7 +17,7 @@ extension Bundle {
         let folder = root.appendingPathComponent("Icons")
         let mascot = MenuMascot(defaults: defaults, directory: folder)
         assert(!mascot.enabled, "Legacy OFF must migrate")
-        assert(mascot.preview.size.width == 22)
+        assert(mascot.preview.size.width == 24)
         func timer(_ object: MenuMascot) -> Timer? {
             Mirror(reflecting: object).children.first(where: { $0.label == "timer" })?.value as? Timer
         }
@@ -29,7 +29,10 @@ extension Bundle {
         assert(timer(mascot) == nil && pending?.isValid != true, "OFF cancels pending frames")
         mascot.selected = "sparrow-doze"
         assert(timer(mascot) == nil, "Selection must not enable animation")
-        assert(mascot.preview.size.width == 22)
+        assert(mascot.preview.size.width == 24)
+        mascot.iconSize = 16
+        assert(mascot.preview.size.width == 16 && timer(mascot) == nil)
+        mascot.iconSize = 24
         let png = Bundle.module.url(forResource: "SparrowIdle", withExtension: "png")!
         try mascot.addIcon(from: png)
         assert(mascot.customs.count == 1)

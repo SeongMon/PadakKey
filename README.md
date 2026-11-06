@@ -138,3 +138,9 @@ VERSION=0.1.4 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NO
 - Mac의 날짜/시간이 틀리면 코드가 맞지 않을 수 있습니다.
 
 참고: [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238), [Apple Keychain services](https://developer.apple.com/documentation/security/keychain-services).
+
+### Windows 미리보기
+
+Windows 트레이 버전의 실행 방법, CI 다운로드, 실제 기기 검사 목록은 [Windows/README.md](Windows/README.md)를 참고하세요. 두 참새 모션, 애니메이션 ON/OFF, 아이콘 추가와 크기 조절을 제공합니다.
+
+Mac에서는 톱니바퀴 → **아이콘 크기**에서 16/20/22/24pt를 선택할 수 있습니다. 메뉴 막대 높이를 넘는 이미지는 macOS가 맞춰 표시합니다.

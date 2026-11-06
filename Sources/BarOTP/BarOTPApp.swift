@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import AppKit
 import Vision
 import UniformTypeIdentifiers
@@ -20,6 +21,7 @@ import OTPCore
     private let registration = RegistrationWindow()
     private let mascot = MenuMascot()
     private var statusItem: NSStatusItem?
+    private var iconSizeObservation: AnyCancellable?
     private let popover = NSPopover()
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let bundleID = Bundle.main.bundleIdentifier,
@@ -29,14 +31,17 @@ import OTPCore
             return
         }
         // App-level ownership keeps the status item and registration window alive.
-        let item = NSStatusBar.system.statusItem(withLength: 24)
+        let item = NSStatusBar.system.statusItem(withLength: CGFloat(mascot.iconSize + 6))
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.13"
+        item.button?.toolTip = "PadakKey 0.1.14"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
+        iconSizeObservation = mascot.$iconSize.sink { [weak self] size in
+            self?.statusItem?.length = CGFloat(size + 6)
+        }
         popover.delegate = self
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 370, height: 280)
@@ -152,6 +157,11 @@ struct MainView: View {
             HStack {
                 Menu {
                     Toggle("애니메이션", isOn: $mascot.enabled)
+                    Menu("아이콘 크기") {
+                        Picker("크기", selection: $mascot.iconSize) {
+                            ForEach([16, 20, 22, 24], id: \.self) { size in Text("\(size) pt").tag(size) }
+                        }.pickerStyle(.inline)
+                    }
                     Menu("아이콘 선택") {
                         Picker("기본 아이콘", selection: $mascot.selected) {
                             ForEach(MenuMascot.builtins) { choice in Text(choice.name).tag(choice.id) }

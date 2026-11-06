@@ -1,0 +1,33 @@
+name: Windows build and checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: OTP specification checks
+        run: dotnet run --project Windows/PadakKey.Checks -c Release
+      - name: Windows integration checks
+        shell: pwsh
+        run: |
+          dotnet build Windows/PadakKey -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $p = Start-Process -FilePath Windows/PadakKey/bin/Release/net10.0-windows/PadakKey.exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Windows checks failed: $($p.ExitCode)" }
+      - name: Build portable Windows x64 app
+        run: dotnet publish Windows/PadakKey -c Release -r win-x64 --self-contained true -o artifacts/PadakKey-Windows-x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PadakKey-Windows-x64
+          path: artifacts/PadakKey-Windows-x64/
+          retention-days: 30
