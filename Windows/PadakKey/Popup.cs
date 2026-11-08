@@ -143,7 +143,6 @@ internal sealed class OtpRow : Panel
     private readonly Label service, name, code;
     private readonly FocusButton copyButton, more;
     private readonly Countdown countdown;
-    private readonly System.Windows.Forms.Timer resetCopy = new() { Interval = 1800 };
     private readonly Action<string> copy;
     private readonly Label? refresh;
     public bool Featured { get; }
@@ -163,11 +162,10 @@ internal sealed class OtpRow : Panel
         countdown = new Countdown(theme) { TabStop = false };
         if (featured) refresh = new Label { Text = "초 후 갱신", Font = theme.Font(8), ForeColor = theme.Muted, TextAlign = ContentAlignment.MiddleLeft };
         Controls.AddRange([service, name, code, copyButton, more, countdown]); if (refresh != null) Controls.Add(refresh);
-        resetCopy.Tick += (_, _) => { resetCopy.Stop(); copyButton.Copied = false; copyButton.Text = "복사"; copyButton.Invalidate(); };
     }
     private void CopyCode()
     {
-        try { copy(account.Code(DateTimeOffset.UtcNow.ToUnixTimeSeconds())); copyButton.Copied = true; copyButton.Text = "복사됨"; copyButton.Invalidate(); resetCopy.Stop(); resetCopy.Start(); }
+        try { copy(account.Code(DateTimeOffset.UtcNow.ToUnixTimeSeconds())); }
         catch { MessageBox.Show("코드를 복사할 수 없습니다. 다시 시도하세요."); }
     }
     protected override void OnResize(EventArgs e)
@@ -195,7 +193,7 @@ internal sealed class OtpRow : Panel
         try
         {
             string current = account.Code(now); string grouped = current.Insert(current.Length / 2, " ");
-            if (code.Text != grouped) { code.Text = grouped; copyButton.Copied = false; copyButton.Text = "복사"; copyButton.Invalidate(); }
+            if (code.Text != grouped) code.Text = grouped;
             countdown.UpdateTime(account.Period - (int)(now % account.Period), account.Period);
         }
         catch { code.Text = "코드 오류"; copyButton.Enabled = false; }
@@ -211,5 +209,5 @@ internal sealed class OtpRow : Panel
         }
         else { using var pen = new Pen(theme.Line); e.Graphics.DrawLine(pen, 0, 0, Width, 0); }
     }
-    protected override void Dispose(bool disposing) { if (disposing) { resetCopy.Dispose(); code.Font.Dispose(); } base.Dispose(disposing); }
+    protected override void Dispose(bool disposing) { if (disposing) code.Font.Dispose(); base.Dispose(disposing); }
 }

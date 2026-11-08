@@ -37,7 +37,7 @@ internal sealed class TrayApp : ApplicationContext
     }
     private void Copy(string code)
     {
-        try { Clipboard.SetText(code); clipboardSequence = GetClipboardSequenceNumber(); clearTimer.Stop(); clearTimer.Start(); }
+        try { Clipboard.SetText(code); clipboardSequence = GetClipboardSequenceNumber(); clearTimer.Stop(); clearTimer.Start(); popup.Hide(); }
         catch (ExternalException ex) { throw new InvalidOperationException("다른 앱이 클립보드를 사용 중입니다.", ex); }
     }
     private void ClearClipboard()

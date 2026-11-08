@@ -44,7 +44,17 @@ internal static class FocusChecks
             row.UpdateCode(30); string after = string.Join(" ", row.Controls.OfType<Label>().Select(label => label.Text));
             if (before == after) throw new Exception("Displayed OTP did not refresh across a period boundary");
         }
-        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live OTP refresh");
+        Popup? copyPopup = null; bool copied = false;
+        using (var popup = new Popup(storage, _ => { copied = true; copyPopup!.Hide(); }, () => { }, () => { }))
+        {
+            copyPopup = popup; popup.PreparePreview(); popup.PreviewMode = true; popup.TopMost = false;
+            popup.Location = new Point(-30000, -30000); popup.Show();
+            var row = popup.Controls.OfType<FlowLayoutPanel>().Single().Controls.OfType<OtpRow>().First();
+            var button = row.Controls.OfType<FocusButton>().Single(button => button.AccessibleName?.EndsWith("OTP 복사") == true);
+            button.PerformClick();
+            if (!copied || popup.Visible || !row.IsDisposed) throw new Exception("Copy did not close and clear the popup");
+        }
+        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live OTP refresh, close after copy");
     }
     private static void Capture(FocusForm form, string? output, string name)
     {
