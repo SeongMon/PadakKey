@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.15"
+        item.button?.toolTip = "PadakKey 0.1.18"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -205,6 +205,7 @@ struct MainView: View {
     private func clearSession() { registration.close(); vault.clear(); Clipboard.shared.clear() }
     private func accountRow(_ account: OTPAccount, at date: Date) -> some View {
         let code = try? account.code(at: date)
+        let nextCode = try? account.nextCode(at: date)
         let remaining = account.period - Int(date.timeIntervalSince1970) % account.period
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -215,19 +216,33 @@ struct MainView: View {
                 Spacer()
                 Button(role: .destructive) { deleting = account } label: { Image(systemName: "trash").font(.caption) }.buttonStyle(.plain).foregroundStyle(.secondary).help("계정 삭제")
             }
-            HStack {
+            HStack(alignment: .bottom, spacing: 12) {
                 Button {
                     if let current = try? account.code() {
                         Clipboard.shared.copy(current)
                         closeAfterCopy()
                     }
                 } label: {
-                    HStack(spacing: 10) {
-                        Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류").font(.system(size: 29, weight: .medium, design: .monospaced))
+                    HStack(spacing: 6) {
+                        Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류").font(.system(size: account.digits == 8 ? 25 : 29, weight: .medium, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.8)
                         Image(systemName: copied == account.id ? "checkmark" : "doc.on.doc").font(.caption)
                     }.foregroundStyle(.primary)
                 }.buttonStyle(.plain).disabled(code == nil).help("OTP 복사")
-                Spacer()
+                Spacer(minLength: 0)
+                Button {
+                    if let next = try? account.nextCode() {
+                        Clipboard.shared.copy(next)
+                        closeAfterCopy()
+                    }
+                } label: {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("다음").font(.system(size: 10))
+                        Text(nextCode.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "—")
+                            .font(.system(size: account.digits == 8 ? 15 : 18, weight: .regular, design: .monospaced)).lineLimit(1)
+                    }.foregroundStyle(.secondary)
+                }.buttonStyle(.plain).disabled(nextCode == nil).fixedSize()
+                    .help("다음 갱신 코드 복사 · 다음 주기부터 사용할 수 있습니다")
+                    .accessibilityLabel("다음 인증 코드 복사")
                 ZStack {
                     Circle().stroke(.quaternary, lineWidth: 3)
                     Circle().trim(from: 0, to: Double(remaining)/Double(account.period)).stroke(remaining <= 5 ? Color.orange : Color.teal, style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))

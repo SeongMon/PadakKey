@@ -14,7 +14,10 @@ final class OTPTests: XCTestCase {
         ]
         for (algorithm, secret, expected) in vectors {
             let account = try OTPAccount(issuer: "RFC", name: "test", secret: encode(secret), algorithm: algorithm, digits: 8)
-            for (time, code) in zip(times, expected) { XCTAssertEqual(try account.code(at: Date(timeIntervalSince1970: time)), code) }
+            for (time, code) in zip(times, expected) {
+                XCTAssertEqual(try account.code(at: Date(timeIntervalSince1970: time)), code)
+                XCTAssertEqual(try account.nextCode(at: Date(timeIntervalSince1970: time - 30)), code)
+            }
         }
     }
     func testURI() throws {
@@ -33,6 +36,23 @@ final class OTPTests: XCTestCase {
         XCTAssertEqual(try account.code(at: Date(timeIntervalSince1970: 30)), try account.code(at: Date(timeIntervalSince1970: 59)))
         XCTAssertNotEqual(try account.code(at: Date(timeIntervalSince1970: 59)), try account.code(at: Date(timeIntervalSince1970: 60)))
         XCTAssertThrowsError(try account.code(at: Date(timeIntervalSince1970: -1)))
+    }
+    func testNextPeriodCodes() throws {
+        for algorithm in Algorithm.allCases {
+            for digits in [6, 8] {
+                for period in [1, 30, 60, 300] {
+                    let account = try OTPAccount(issuer: "", name: "next", secret: encode("12345678901234567890"), algorithm: algorithm, digits: digits, period: period)
+                    let firstNext = try account.code(at: Date(timeIntervalSince1970: Double(period)))
+                    XCTAssertEqual(try account.nextCode(at: Date(timeIntervalSince1970: 0)), firstNext)
+                    XCTAssertEqual(try account.nextCode(at: Date(timeIntervalSince1970: Double(period) - 0.01)), firstNext)
+                    XCTAssertEqual(try account.nextCode(at: Date(timeIntervalSince1970: Double(period))), try account.code(at: Date(timeIntervalSince1970: Double(period * 2))))
+                }
+            }
+        }
+        var account = try OTPAccount(issuer: "", name: "invalid", secret: encode("12345678901234567890"))
+        for time in [-1.0, Double.nan, Double.infinity] { XCTAssertThrowsError(try account.nextCode(at: Date(timeIntervalSince1970: time))) }
+        account.period = 0
+        XCTAssertThrowsError(try account.nextCode())
     }
     private func encode(_ text: String) -> String {
         let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567")
@@ -54,7 +74,8 @@ func XCTAssertThrowsError<T>(_ expression: @autoclosure () throws -> T) { do { _
   try suite.testURI()
   try suite.testBase32()
   try suite.testPeriodBoundaryAndSixDigits()
-  print("PASS: RFC 6238 (18 vectors), URI validation, Base32, period boundaries, six digits")
+  try suite.testNextPeriodCodes()
+  print("PASS: RFC 6238 (18 vectors), URI validation, Base32, current/next period boundaries, six/eight digits")
  }
 }
 

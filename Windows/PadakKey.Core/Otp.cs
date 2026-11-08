@@ -11,6 +11,12 @@ public sealed record Account(Guid Id, string Issuer, string Name, string Secret,
         if (Digits is not (6 or 8) || Period < 1 || Period > 300 || Algorithm is not ("SHA1" or "SHA256" or "SHA512")) throw new FormatException("지원하지 않는 OTP 설정입니다.");
         var key = Otp.Decode(Secret); CryptographicOperations.ZeroMemory(key);
     }
+    public string NextCode(long seconds)
+    {
+        if (seconds < 0) throw new ArgumentOutOfRangeException(nameof(seconds));
+        if (Period < 1 || Period > 300) throw new FormatException("지원하지 않는 갱신 주기입니다.");
+        return Code(checked(seconds + (Period - seconds % Period)));
+    }
     public string Code(long seconds)
     {
         Validate();

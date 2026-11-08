@@ -36,6 +36,13 @@ public struct OTPAccount: Identifiable, Codable, Equatable {
         guard let algorithm = Algorithm(rawValue: (fields["algorithm"] ?? "SHA1").uppercased()), let digits = Int(fields["digits"] ?? "6"), let period = Int(fields["period"] ?? "30") else { throw OTPError.invalid("등록 옵션을 확인하세요.") }
         return try OTPAccount(issuer: issuer, name: parts.last ?? "", secret: secret, algorithm: algorithm, digits: digits, period: period)
     }
+    public func nextCode(at date: Date = Date()) throws -> String {
+        let time = date.timeIntervalSince1970
+        guard (1...300).contains(period), time.isFinite, time >= 0 else { throw OTPError.invalid("잘못된 OTP 설정 또는 시간입니다.") }
+        let next = (floor(time / Double(period)) + 1) * Double(period)
+        guard next > time else { throw OTPError.invalid("다음 OTP 시간을 계산할 수 없습니다.") }
+        return try code(at: Date(timeIntervalSince1970: next))
+    }
     public func code(at date: Date = Date()) throws -> String {
         guard [6,8].contains(digits), (1...300).contains(period), date.timeIntervalSince1970 >= 0, date.timeIntervalSince1970 < Double(Int64.max) else { throw OTPError.invalid("잘못된 OTP 설정 또는 시간입니다.") }
         let key = SymmetricKey(data: try Base32.decode(secret))

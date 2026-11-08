@@ -5,8 +5,17 @@ long[] times = [59, 1111111109, 1111111111, 1234567890, 2000000000, 20000000000]
 string[][] expected = [["94287082","07081804","14050471","89005924","69279037","65353130"],["46119246","68084774","67062674","91819424","90698825","77737706"],["90693936","25091201","99943326","93441116","38618901","47863826"]];
 string[] algorithms = ["SHA1","SHA256","SHA512"];
 int[] lengths = [20,32,64];
-for (int a = 0; a < 3; a++) { string raw = string.Concat(Enumerable.Repeat("1234567890",7))[..lengths[a]]; var account = new Account(Guid.NewGuid(),"Test","RFC",Base32(Encoding.ASCII.GetBytes(raw)),algorithms[a],8); for (int i=0;i<times.Length;i++) if(account.Code(times[i])!=expected[a][i]) throw new Exception("RFC vector failed"); }
+for (int a = 0; a < 3; a++) { string raw = string.Concat(Enumerable.Repeat("1234567890",7))[..lengths[a]]; var account = new Account(Guid.NewGuid(),"Test","RFC",Base32(Encoding.ASCII.GetBytes(raw)),algorithms[a],8); for (int i=0;i<times.Length;i++) if(account.Code(times[i])!=expected[a][i] || account.NextCode(times[i]-30)!=expected[a][i]) throw new Exception("Current/next RFC vector failed"); }
 var valid = Otp.Parse("otpauth://totp/Example:alice?secret=JBSWY3DPEHPK3PXP&issuer=Example");
 if(valid.Name!="alice" || valid.Code(29)==valid.Code(30) || valid.Code(1)!=valid.Code(29)) throw new Exception("Boundary/URI failure");
 foreach(string uri in new[]{"otpauth://hotp/a?secret=JBSWY3DPEHPK3PXP", "otpauth://totp/a?secret=BAD!", "otpauth://totp/a?secret=JBSWY3DPEHPK3PXP&period=0", "otpauth://totp/a?secret=JBSWY3DPEHPK3PXP&secret=AAAA", "otpauth://totp/X:a?issuer=Y&secret=JBSWY3DPEHPK3PXP"}) { bool failed=false; try{Otp.Parse(uri);}catch{failed=true;}if(!failed)throw new Exception("Invalid URI accepted"); }
-Console.WriteLine("PASS: 18 RFC6238 vectors, period boundaries, URI validation");
+foreach (string algorithm in algorithms)
+foreach (int digits in new[] { 6, 8 })
+foreach (int period in new[] { 1, 30, 60, 300 })
+{
+    var account = valid with { Algorithm = algorithm, Digits = digits, Period = period };
+    if (account.NextCode(0) != account.Code(period) || account.NextCode(period - 1) != account.Code(period) || account.NextCode(period) != account.Code(period * 2)) throw new Exception("Next period boundary failed");
+}
+foreach (long time in new[] { -1L, long.MaxValue })
+{ bool failed = false; try { valid.NextCode(time); } catch (ArgumentOutOfRangeException) { failed = true; } catch (OverflowException) { failed = true; } if (!failed) throw new Exception("Invalid next time accepted"); }
+Console.WriteLine("PASS: 18 current/next RFC6238 vectors, next period boundaries, 6/8 digits, custom periods, URI validation");

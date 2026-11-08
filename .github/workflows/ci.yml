@@ -15,3 +15,10 @@ jobs:
       - run: bash scripts/verify-vault.sh
       - run: bash scripts/verify-mascot.sh
       - run: bash scripts/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PadakKey-macOS-universal
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          retention-days: 30

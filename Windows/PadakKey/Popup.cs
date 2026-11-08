@@ -142,30 +142,35 @@ internal sealed class OtpRow : Panel
     private readonly Account account;
     private readonly Label service, name, code;
     private readonly FocusButton copyButton, more;
+    private readonly NextCodeButton nextCode;
     private readonly Countdown countdown;
     private readonly Action<string> copy;
+    private readonly Func<long> timeSource;
     private readonly Label? refresh;
     public bool Featured { get; }
     private int Px(int value) => (int)Math.Round(value * DeviceDpi / 96f);
-    public OtpRow(FocusTheme theme, Account account, bool featured, Action<string> copy, Action delete)
+    public OtpRow(FocusTheme theme, Account account, bool featured, Action<string> copy, Action delete, Func<long>? timeSource = null)
     {
         this.theme = theme; this.account = account; this.copy = copy; Featured = featured;
+        this.timeSource = timeSource ?? (() => DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         DoubleBuffered = true; Margin = Padding.Empty; BackColor = theme.Surface;
         service = new Label { Text = account.Issuer.Length > 0 ? account.Issuer : "인증 계정", AutoEllipsis = true, Font = theme.Font(featured ? 10 : 9, FontStyle.Bold), ForeColor = theme.Text };
         name = new Label { Text = account.Name, AutoEllipsis = true, Font = theme.Font(8), ForeColor = theme.Muted };
         code = new Label { Font = new Font("Consolas", featured ? (account.Digits == 8 ? 25 : 29) : (account.Digits == 8 ? 15 : 19)), ForeColor = theme.Text, Cursor = Cursors.Hand, AccessibleName = "현재 OTP 코드; 복사 버튼으로 복사" };
         code.Click += (_, _) => CopyCode();
-        copyButton = new FocusButton(theme) { Text = "복사", Glyph = FocusDraw.Copy, Solid = featured, Font = theme.Font(featured ? 8.5f : 8), AccessibleName = service.Text + " OTP 복사" };
+        copyButton = new FocusButton(theme) { Text = featured ? "복사" : "", Glyph = FocusDraw.Copy, Solid = featured, Font = theme.Font(featured ? 8.5f : 8), AccessibleName = service.Text + " OTP 복사" };
         copyButton.Click += (_, _) => CopyCode();
+        nextCode = new NextCodeButton(theme) { Font = new Font("Consolas", account.Digits == 8 ? 12 : 14), AccessibleName = service.Text + " 다음 OTP 복사", AccessibleDescription = "다음 갱신 주기부터 사용할 수 있는 코드를 복사합니다." };
+        nextCode.Click += (_, _) => CopyCode(next: true);
         more = new FocusButton(theme) { Glyph = FocusDraw.More, Quiet = true, AccessibleName = service.Text + " 계정 관리" };
         more.Click += (_, _) => { var menu = new ContextMenuStrip { Font = theme.Font() }; menu.Items.Add("계정 삭제…", null, (_, _) => delete()); menu.Closed += (_, _) => menu.Dispose(); menu.Show(more, new Point(0, more.Height)); };
         countdown = new Countdown(theme) { TabStop = false };
         if (featured) refresh = new Label { Text = "초 후 갱신", Font = theme.Font(8), ForeColor = theme.Muted, TextAlign = ContentAlignment.MiddleLeft };
-        Controls.AddRange([service, name, code, copyButton, more, countdown]); if (refresh != null) Controls.Add(refresh);
+        Controls.AddRange([service, name, code, copyButton, nextCode, more, countdown]); if (refresh != null) Controls.Add(refresh);
     }
-    private void CopyCode()
+    private void CopyCode(bool next = false)
     {
-        try { copy(account.Code(DateTimeOffset.UtcNow.ToUnixTimeSeconds())); }
+        try { long now = timeSource(); copy(next ? account.NextCode(now) : account.Code(now)); }
         catch { MessageBox.Show("코드를 복사할 수 없습니다. 다시 시도하세요."); }
     }
     protected override void OnResize(EventArgs e)
@@ -173,10 +178,10 @@ internal sealed class OtpRow : Panel
         base.OnResize(e); if (service == null) return;
         if (Featured)
         {
-            service.TextAlign = name.TextAlign = code.TextAlign = ContentAlignment.MiddleCenter;
+            service.TextAlign = name.TextAlign = ContentAlignment.MiddleCenter; code.TextAlign = ContentAlignment.MiddleLeft;
             service.SetBounds(Px(24), Px(66), Width - Px(48), Px(23));
             name.SetBounds(Px(14), Px(90), Width - Px(28), Px(20));
-            code.SetBounds(0, Px(116), Width, Px(52));
+            code.SetBounds(0, Px(116), Width - Px(120), Px(52)); nextCode.SetBounds(Width - Px(112), Px(121), Px(112), Px(43));
             int left = Math.Max(0, (Width - Px(190)) / 2);
             copyButton.SetBounds(left, Px(179), Px(92), Px(35)); countdown.SetBounds(left + Px(106), Px(182), Px(28), Px(28));
             refresh!.SetBounds(left + Px(138), Px(179), Px(70), Px(35)); more.SetBounds(Width - Px(25), Px(8), Px(25), Px(25));
@@ -185,7 +190,8 @@ internal sealed class OtpRow : Panel
         {
             service.SetBounds(0, Px(14), Width - Px(74), Px(20)); name.SetBounds(0, Px(36), Width - Px(56), Px(18));
             countdown.SetBounds(Width - Px(61), Px(18), Px(28), Px(28)); more.SetBounds(Width - Px(25), Px(19), Px(25), Px(25));
-            code.SetBounds(0, Px(60), Width - Px(80), Px(36)); copyButton.SetBounds(Width - Px(70), Px(63), Px(70), Px(31));
+            code.SetBounds(0, Px(60), Width - Px(152), Px(36)); copyButton.SetBounds(Width - Px(148), Px(63), Px(32), Px(31));
+            nextCode.SetBounds(Width - Px(112), Px(57), Px(112), Px(43));
         }
     }
     public void UpdateCode(long now)
@@ -194,9 +200,11 @@ internal sealed class OtpRow : Panel
         {
             string current = account.Code(now); string grouped = current.Insert(current.Length / 2, " ");
             if (code.Text != grouped) code.Text = grouped;
+            string following = account.NextCode(now); string groupedNext = following.Insert(following.Length / 2, " ");
+            if (nextCode.Text != groupedNext) nextCode.Text = groupedNext;
             countdown.UpdateTime(account.Period - (int)(now % account.Period), account.Period);
         }
-        catch { code.Text = "코드 오류"; copyButton.Enabled = false; }
+        catch { code.Text = "코드 오류"; copyButton.Enabled = nextCode.Enabled = false; }
     }
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -209,5 +217,28 @@ internal sealed class OtpRow : Panel
         }
         else { using var pen = new Pen(theme.Line); e.Graphics.DrawLine(pen, 0, 0, Width, 0); }
     }
-    protected override void Dispose(bool disposing) { if (disposing) code.Font.Dispose(); base.Dispose(disposing); }
+    protected override void Dispose(bool disposing) { if (disposing) { code.Font.Dispose(); nextCode.Font.Dispose(); } base.Dispose(disposing); }
+}
+
+internal sealed class NextCodeButton : Button
+{
+    private readonly FocusTheme theme;
+    private bool hover;
+    public NextCodeButton(FocusTheme theme)
+    {
+        this.theme = theme; Text = "—"; Cursor = Cursors.Hand; FlatStyle = FlatStyle.Flat;
+        FlatAppearance.BorderSize = 0; BackColor = theme.Surface; ForeColor = theme.Muted; UseVisualStyleBackColor = false;
+        SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+    }
+    protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        int Px(int n) => (int)Math.Round(n * DeviceDpi / 96f);
+        var g = e.Graphics; g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias; g.Clear(theme.Surface);
+        if (hover) FocusDraw.Fill(g, ClientRectangle, Px(7), theme.Soft);
+        TextRenderer.DrawText(g, "다음", theme.Font(7), new Rectangle(Px(3), Px(2), Width - Px(6), Px(14)), theme.Muted, TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(g, Text, Font, new Rectangle(Px(3), Px(16), Width - Px(6), Height - Px(17)), theme.Muted, TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        if (Focused && ShowFocusCues) ControlPaint.DrawFocusRectangle(g, ClientRectangle, theme.Accent, theme.Surface);
+    }
 }

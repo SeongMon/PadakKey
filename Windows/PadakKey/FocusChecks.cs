@@ -44,17 +44,30 @@ internal static class FocusChecks
             row.UpdateCode(30); string after = string.Join(" ", row.Controls.OfType<Label>().Select(label => label.Text));
             if (before == after) throw new Exception("Displayed OTP did not refresh across a period boundary");
         }
-        Popup? copyPopup = null; bool copied = false;
-        using (var popup = new Popup(storage, _ => { copied = true; copyPopup!.Hide(); }, () => { }, () => { }))
+        foreach (bool next in new[] { false, true })
         {
+            Popup? copyPopup = null; bool copied = false;
+            using var popup = new Popup(storage, _ => { copied = true; copyPopup!.Hide(); }, () => { }, () => { });
             copyPopup = popup; popup.PreparePreview(); popup.PreviewMode = true; popup.TopMost = false;
             popup.Location = new Point(-30000, -30000); popup.Show();
             var row = popup.Controls.OfType<FlowLayoutPanel>().Single().Controls.OfType<OtpRow>().First();
-            var button = row.Controls.OfType<FocusButton>().Single(button => button.AccessibleName?.EndsWith("OTP 복사") == true);
+            Button button = next ? row.Controls.OfType<NextCodeButton>().Single() : row.Controls.OfType<FocusButton>().Single(button => button.AccessibleName?.EndsWith("OTP 복사") == true);
             button.PerformClick();
-            if (!copied || popup.Visible || !row.IsDisposed) throw new Exception("Copy did not close and clear the popup");
+            if (!copied || popup.Visible || !row.IsDisposed) throw new Exception("Current/next copy did not close and clear the popup");
         }
-        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live OTP refresh, close after copy");
+        long currentTime = 29; string? copiedNext = null;
+        using (var row = new OtpRow(new FocusTheme(false), Examples[0], false, value => copiedNext = value, () => { }, () => currentTime))
+        {
+            using var form = new FocusForm { PreviewMode = true, TopMost = false, Location = new Point(-30000, -30000), ClientSize = new Size(322, 112) };
+            row.Dock = DockStyle.Fill; form.Controls.Add(row); form.Show(); row.UpdateCode(currentTime);
+            string expected = Examples[0].Code(30); if (row.Controls.OfType<NextCodeButton>().Single().Text.Replace(" ", "") != expected) throw new Exception("Next preview incorrect");
+            currentTime = 30; row.Controls.OfType<NextCodeButton>().Single().PerformClick();
+            if (copiedNext != Examples[0].Code(60)) throw new Exception("Next copy used a stale period");
+            form.Hide();
+        }
+        storage.Save([Examples[0] with { Digits = 8, Period = 60 }]);
+        using (var popup = new Popup(storage, _ => { }, () => { }, () => { })) { popup.PreparePreview(); Capture(popup, output, "otp-eight-digits"); }
+        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live current/next OTP, close after both copy actions");
     }
     private static void Capture(FocusForm form, string? output, string name)
     {
