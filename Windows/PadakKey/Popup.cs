@@ -41,20 +41,25 @@ internal sealed class Popup : FocusForm
         Deactivate += (_, _) => { if (!preparing) Hide(); };
         VisibleChanged += (_, _) => { if (!Visible) { tick.Stop(); accounts.Clear(); ClearRows(); } };
         FormClosing += (_, e) => { if (e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); } };
-        KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) { Hide(); e.Handled = true; } if (e.Control && e.KeyCode == Keys.F) { searchShown = true; searchFrame.Visible = true; LayoutContent(); search.Focus(); e.Handled = true; } };
+        KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) { Hide(); e.Handled = true; } if (e.Control && e.KeyCode == Keys.F) { searchShown = true; searchFrame.Visible = true; LayoutContent(); PositionAtAnchor(); search.Focus(); e.Handled = true; } };
         ClientSize = new(370, 370);
     }
 
     public void Open() => OpenAt(Cursor.Position);
-    public void Reopen() => OpenAt(anchor);
+    public void Reopen() { if (anchor == Point.Empty) Open(); else OpenAt(anchor); }
     private void OpenAt(Point point)
     {
         anchor = point; LoadAccounts();
-        var area = Screen.FromPoint(point).WorkingArea;
-        Location = new Point(Math.Clamp(point.X - Width, area.Left, Math.Max(area.Left, area.Right - Width)), Math.Clamp(point.Y - Height, area.Top, Math.Max(area.Top, area.Bottom - Height)));
+        PositionAtAnchor();
         Show(); Activate(); settingsButton.Focus(); tick.Start();
     }
     internal void PreparePreview() { anchor = new Point(1000, 1000); LoadAccounts(); }
+    private void PositionAtAnchor()
+    {
+        if (PreviewMode) return;
+        var area = Screen.FromPoint(anchor).WorkingArea;
+        Location = new Point(Math.Clamp(anchor.X - Width, area.Left, Math.Max(area.Left, area.Right - Width)), Math.Clamp(anchor.Y - Height, area.Top, Math.Max(area.Top, area.Bottom - Height)));
+    }
     private void LoadAccounts()
     {
         preparing = true; loadFailed = false;
@@ -85,7 +90,7 @@ internal sealed class Popup : FocusForm
                 : accounts.Count == 0 ? "첫 번째 OTP를 추가하세요.\nQR 이미지나 인증 키로 시작할 수 있어요." : "검색 결과가 없습니다.";
             rows.Controls.Add(empty);
         }
-        LayoutContent(); rows.ResumeLayout(true); UpdateCodes(); Invalidate();
+        LayoutContent(); rows.ResumeLayout(true); UpdateCodes(); if (Visible) PositionAtAnchor(); Invalidate();
     }
     private void DeleteAccount(Account account)
     {
