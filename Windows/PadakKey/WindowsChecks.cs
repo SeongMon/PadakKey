@@ -22,6 +22,7 @@ internal static class WindowsChecks
             try{System.Runtime.InteropServices.Marshal.Copy(matrix.Pixels,0,data.Scan0,matrix.Pixels.Length);}finally{bmp.UnlockBits(data);}
             string qr=Path.Combine(root,"qr.png");bmp.Save(qr);if(Otp.Parse(Registration.ReadQr(qr)).Name!="alice")throw new Exception("QR failed");
             using var tray = new NotifyIcon();var settings=new Settings{Animation=false};using var mascot=new Mascot(tray,settings);if(tray.Icon==null)throw new Exception("Missing tray icon");settings.Icon="doze";settings.IconSize=60;mascot.Reload();if(tray.Icon==null)throw new Exception("Doze failed");
+            FocusChecks.Run(root);
             Console.WriteLine("PASS: DPAPI roundtrip/corruption, PNG frames, QR image decoding, builtin icon loading");
         }
         finally{Directory.Delete(root,true);}

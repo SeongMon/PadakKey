@@ -4,30 +4,54 @@ using PadakKey.Core;
 using ZXing;
 using FormatException = System.FormatException;
 namespace PadakKey;
-internal sealed class Registration : Form
+internal sealed class Registration : FocusForm
 {
     public Account? Result { get; private set; }
-    private readonly TextBox issuer = new() { PlaceholderText = "서비스 이름" }, name = new() { PlaceholderText = "계정 / 이메일" }, secret = new() { PlaceholderText = "Base32 인증 키", UseSystemPasswordChar = true }, uri = new() { PlaceholderText = "otpauth://totp/...", UseSystemPasswordChar = true };
-    public Registration()
+    private readonly TextBox issuer = new() { PlaceholderText = "예: GitHub" }, name = new() { PlaceholderText = "name@example.com" }, secret = new() { PlaceholderText = "Base32 키 또는 otpauth://totp/...", UseSystemPasswordChar = true };
+    public Registration(FocusTheme? theme = null) : base(theme)
     {
-        Text = "계정 추가"; ClientSize = new(420, 310); StartPosition = FormStartPosition.CenterParent; FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false;
-        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new(16), WrapContents = false };
-        foreach (var field in new[] { issuer, name, secret, uri }) { field.Width = 380; panel.Controls.Add(field); }
-        var qr = new Button { Text = "QR 코드 이미지 열기", Width = 380, Height = 36 };
-        qr.Click += (_, _) =>
+        Text = "OTP 추가"; ClientSize = new(370, 570); StartPosition = FormStartPosition.CenterScreen; MaximizeBox = false; MinimizeBox = false;
+        var back = Button("", FocusDraw.Back); back.Quiet = true; back.AccessibleName = "OTP 추가 취소"; back.SetBounds(18, 16, 32, 32); back.Click += (_, _) => { DialogResult = DialogResult.Cancel; Close(); }; Controls.Add(back);
+        var title = Label("OTP 추가", 10); title.TextAlign = ContentAlignment.MiddleCenter; title.SetBounds(70, 16, 230, 32); Controls.Add(title);
+        var emblem = Label(FocusDraw.Lock, 13); emblem.Font = new Font("Segoe MDL2 Assets", 14); emblem.BackColor = Theme.Soft; emblem.TextAlign = ContentAlignment.MiddleCenter; emblem.SetBounds(163, 78, 44, 44); Controls.Add(emblem);
+        var heading = Label("새 계정을 연결하세요.", 14); heading.TextAlign = ContentAlignment.MiddleCenter; heading.SetBounds(24, 136, 322, 30); Controls.Add(heading);
+        var hint = Label("서비스의 2단계 인증 설정에서\nQR 이미지나 인증 키를 가져오세요.", 8.5f); hint.ForeColor = Theme.Muted; hint.TextAlign = ContentAlignment.MiddleCenter; hint.SetBounds(24, 174, 322, 42); Controls.Add(hint);
+        var manual = Button("인증 키 입력"); manual.Selected = true; manual.SetBounds(24, 233, 156, 34); Controls.Add(manual);
+        var qr = Button("QR 이미지", FocusDraw.Image); qr.SetBounds(190, 233, 156, 34); Controls.Add(qr);
+        var feedback = Label("", 8); feedback.ForeColor = Theme.Warning; feedback.SetBounds(24, 481, 322, 37); Controls.Add(feedback);
+        void Field(string text, TextBox field, int y)
         {
-            using var picker = new OpenFileDialog { Filter = "이미지|*.png;*.jpg;*.jpeg;*.bmp;*.gif" };
+            var label = Label(text, 8); label.ForeColor = Theme.Muted; label.SetBounds(24, y, 322, 19); Controls.Add(label);
+            var frame = new Panel { Bounds = new Rectangle(24, y + 23, 322, 33), BackColor = Theme.Soft, Padding = new Padding(10, 8, 10, 6) };
+            field.BorderStyle = BorderStyle.None; field.BackColor = Theme.Soft; field.ForeColor = Theme.Text; field.Font = Theme.Font(9); field.Dock = DockStyle.Fill; field.MaxLength = field == secret ? 8192 : 256; field.AccessibleName = text;
+            frame.Controls.Add(field); Controls.Add(frame);
+        }
+        Field("서비스", issuer, 290); Field("계정", name, 353); Field("인증 키 또는 OTP URI", secret, 416);
+        var save = Button("추가하기", "", true); save.SetBounds(24, 522, 322, 34); Controls.Add(save);
+        manual.Click += (_, _) => { manual.Selected = true; qr.Selected = false; manual.Invalidate(); qr.Invalidate(); secret.Focus(); };
+        qr.Click += async (_, _) =>
+        {
+            using var picker = new OpenFileDialog { Filter = "QR 이미지|*.png;*.jpg;*.jpeg;*.bmp;*.gif", Title = "OTP QR 이미지 선택" };
             if (picker.ShowDialog(this) != DialogResult.OK) return;
-            try { uri.Text = ReadQr(picker.FileName); _ = Otp.Parse(uri.Text); } catch (Exception ex) { MessageBox.Show(this, ex is FormatException ? ex.Message : "이미지를 읽을 수 없습니다."); }
+            qr.Enabled = save.Enabled = false; feedback.Text = "QR 코드를 읽고 있어요…";
+            try
+            {
+                string value = await Task.Run(() => ReadQr(picker.FileName)); var account = Otp.Parse(value);
+                if (IsDisposed || Disposing) return;
+                issuer.Text = account.Issuer; name.Text = account.Name; secret.Text = value;
+                manual.Selected = false; qr.Selected = true; manual.Invalidate(); qr.Invalidate(); feedback.ForeColor = Theme.Accent; feedback.Text = "QR 코드를 읽었어요. 추가하기를 눌러 저장하세요.";
+            }
+            catch (Exception ex) { if (!IsDisposed && !Disposing) { feedback.ForeColor = Theme.Warning; feedback.Text = ex is FormatException ? ex.Message : "이미지를 읽을 수 없습니다."; } }
+            finally { if (!IsDisposed && !Disposing) qr.Enabled = save.Enabled = true; }
         };
-        panel.Controls.Add(qr);
-        var save = new Button { Text = "계정 저장", Width = 380, Height = 36 };
         save.Click += (_, _) =>
         {
-            try { Result = string.IsNullOrWhiteSpace(uri.Text) ? new Account(Guid.NewGuid(), issuer.Text.Trim(), name.Text.Trim(), secret.Text.Trim()) : Otp.Parse(uri.Text); Result.Validate(); DialogResult = DialogResult.OK; Close(); }
-            catch (Exception ex) { MessageBox.Show(this, ex is FormatException ? ex.Message : "인증 키와 계정 설정을 확인하세요."); }
+            try { string value = secret.Text.Trim(); Result = value.StartsWith("otpauth:", StringComparison.OrdinalIgnoreCase) ? Otp.Parse(value) : new Account(Guid.NewGuid(), issuer.Text.Trim(), name.Text.Trim(), value); Result.Validate(); DialogResult = DialogResult.OK; Close(); }
+            catch (Exception ex) { feedback.ForeColor = Theme.Warning; feedback.Text = ex is FormatException ? ex.Message : "인증 키와 계정 설정을 확인하세요."; }
         };
-        panel.Controls.Add(save); Controls.Add(panel); AcceptButton = save;
+        AcceptButton = save; CancelButton = back;
+        FormClosed += (_, _) => secret.Clear();
+        Shown += (_, _) => { if (!PreviewMode) issuer.Focus(); };
     }
     internal static string ReadQr(string path)
     {
