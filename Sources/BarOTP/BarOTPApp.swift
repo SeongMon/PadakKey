@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.18"
+        item.button?.toolTip = "PadakKey 0.1.19"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -99,7 +99,6 @@ struct MainView: View {
     var closeAfterCopy: () -> Void
     var addAccount: () -> Void
     @State private var search = ""
-    @State private var copied: UUID?
     @State private var deleting: OTPAccount?
     @State private var loginEnabled = SMAppService.mainApp.status == .enabled
     var body: some View {
@@ -187,13 +186,14 @@ struct MainView: View {
                     Button("종료") { Clipboard.shared.clear(); NSApp.terminate(nil) }
                 } label: { Image(systemName: "gearshape") }.menuStyle(.borderlessButton).frame(width: 30)
                 Spacer()
-                Text("로컬 키체인 저장 · 복사 후 30초 뒤 지움").font(.system(size: 10)).foregroundStyle(.secondary)
+                if vault.loaded && !visibleAccounts.isEmpty {
+                    Text("코드를 클릭하면 복사됩니다").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
             }.padding(12).fixedSize(horizontal: false, vertical: true)
         }.frame(width: 370, height: panelHeight)
         .onAppear { mascot.refreshCustoms(); loginEnabled = SMAppService.mainApp.status == .enabled; resize(panelHeight) }
         .onChange(of: panelHeight) { height in resize(height) }
-        .onChange(of: vault.loaded) { loaded in if loaded { search = ""; copied = nil } }
-        .onDisappear { copied = nil }
+        .onChange(of: vault.loaded) { loaded in if loaded { search = "" } }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.sessionDidResignActiveNotification)) { _ in clearSession() }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.willSleepNotification)) { _ in clearSession() }
         .onReceive(DistributedNotificationCenter.default().publisher(for: Notification.Name("com.apple.screenIsLocked"))) { _ in clearSession() }
@@ -223,11 +223,9 @@ struct MainView: View {
                         closeAfterCopy()
                     }
                 } label: {
-                    HStack(spacing: 6) {
-                        Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류").font(.system(size: account.digits == 8 ? 25 : 29, weight: .medium, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.8)
-                        Image(systemName: copied == account.id ? "checkmark" : "doc.on.doc").font(.caption)
-                    }.foregroundStyle(.primary)
-                }.buttonStyle(.plain).disabled(code == nil).help("OTP 복사")
+                    Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류")
+                        .font(.system(size: account.digits == 8 ? 25 : 29, weight: .medium, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.8).foregroundStyle(.primary)
+                }.buttonStyle(OTPCodeButtonStyle()).disabled(code == nil).help("현재 OTP 복사").accessibilityLabel("현재 인증 코드 복사")
                 Spacer(minLength: 0)
                 Button {
                     if let next = try? account.nextCode() {
@@ -240,7 +238,7 @@ struct MainView: View {
                         Text(nextCode.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "—")
                             .font(.system(size: account.digits == 8 ? 15 : 18, weight: .regular, design: .monospaced)).lineLimit(1)
                     }.foregroundStyle(.secondary)
-                }.buttonStyle(.plain).disabled(nextCode == nil).fixedSize()
+                }.buttonStyle(OTPCodeButtonStyle()).disabled(nextCode == nil).fixedSize()
                     .help("다음 갱신 코드 복사 · 다음 주기부터 사용할 수 있습니다")
                     .accessibilityLabel("다음 인증 코드 복사")
                 ZStack {
@@ -250,7 +248,20 @@ struct MainView: View {
                 }.frame(width: 30, height: 30)
             }
         }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 12))
-        .onChange(of: code) { _ in if copied == account.id { copied = nil } }
+    }
+}
+private struct OTPCodeButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { HoverLabel(configuration: configuration) }
+    private struct HoverLabel: View {
+        let configuration: ButtonStyleConfiguration
+        @State private var isHovered = false
+        var body: some View {
+            configuration.label
+                .padding(.horizontal, 4).padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(configuration.isPressed ? 0.12 : (isHovered ? 0.06 : 0))))
+                .contentShape(RoundedRectangle(cornerRadius: 6))
+                .onHover { isHovered = $0 }
+        }
     }
 }
 struct AddView: View {

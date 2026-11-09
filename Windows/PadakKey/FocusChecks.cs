@@ -40,8 +40,8 @@ internal static class FocusChecks
         using (var row = new OtpRow(new FocusTheme(false), Examples[0], true, _ => { }, () => { }))
         {
             row.Size = new Size(322, 228); row.UpdateCode(29);
-            string before = string.Join(" ", row.Controls.OfType<Label>().Select(label => label.Text));
-            row.UpdateCode(30); string after = string.Join(" ", row.Controls.OfType<Label>().Select(label => label.Text));
+            string before = string.Join(" ", row.Controls.OfType<OtpCodeButton>().Select(button => button.Text));
+            row.UpdateCode(30); string after = string.Join(" ", row.Controls.OfType<OtpCodeButton>().Select(button => button.Text));
             if (before == after) throw new Exception("Displayed OTP did not refresh across a period boundary");
         }
         foreach (bool next in new[] { false, true })
@@ -51,7 +51,7 @@ internal static class FocusChecks
             copyPopup = popup; popup.PreparePreview(); popup.PreviewMode = true; popup.TopMost = false;
             popup.Location = new Point(-30000, -30000); popup.Show();
             var row = popup.Controls.OfType<FlowLayoutPanel>().Single().Controls.OfType<OtpRow>().First();
-            Button button = next ? row.Controls.OfType<NextCodeButton>().Single() : row.Controls.OfType<FocusButton>().Single(button => button.AccessibleName?.EndsWith("OTP 복사") == true);
+            Button button = row.Controls.OfType<OtpCodeButton>().Single(button => button.IsNext == next);
             button.PerformClick();
             if (!copied || popup.Visible || !row.IsDisposed) throw new Exception("Current/next copy did not close and clear the popup");
         }
@@ -60,8 +60,8 @@ internal static class FocusChecks
         {
             using var form = new FocusForm { PreviewMode = true, TopMost = false, Location = new Point(-30000, -30000), ClientSize = new Size(322, 112) };
             row.Dock = DockStyle.Fill; form.Controls.Add(row); form.Show(); row.UpdateCode(currentTime);
-            string expected = Examples[0].Code(30); if (row.Controls.OfType<NextCodeButton>().Single().Text.Replace(" ", "") != expected) throw new Exception("Next preview incorrect");
-            currentTime = 30; row.Controls.OfType<NextCodeButton>().Single().PerformClick();
+            string expected = Examples[0].Code(30); if (row.Controls.OfType<OtpCodeButton>().Single(button => button.IsNext).Text.Replace(" ", "") != expected) throw new Exception("Next preview incorrect");
+            currentTime = 30; row.Controls.OfType<OtpCodeButton>().Single(button => button.IsNext).PerformClick();
             if (copiedNext != Examples[0].Code(60)) throw new Exception("Next copy used a stale period");
             form.Hide();
         }
