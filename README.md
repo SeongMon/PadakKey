@@ -1,15 +1,19 @@
 # PadakKey
 
+참새 아이콘에서 현재·다음 인증 코드를 확인하고, 숫자를 눌러 복사하는 오프라인 TOTP 앱입니다. **macOS 13 이상**과 **Windows 11 x64**를 지원합니다.
+
 ## 다운로드
 
-운영체제에 맞는 파일을 선택하세요. [Mac · Windows 공개 미리보기 릴리스](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.15)
+현재 버전은 **0.1.19**입니다. 아래는 검사와 빌드가 통과한 해당 버전의 설치 파일입니다.
 
 | 운영체제 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| macOS 13+ · Apple Silicon / Intel | [Mac용 ZIP](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.15/PadakKey-macOS-universal.zip) | 압축을 풀고 `PadakKey.app`을 응용 프로그램 폴더로 이동 |
-| Windows 11 · x64 | [Windows용 ZIP](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.15/PadakKey-Windows-x64.zip) | 압축을 모두 풀고 `PadakKey.exe` 실행. `Assets` 폴더를 옆에 유지 |
+| macOS 13+ · Apple Silicon / Intel | [Mac 0.1.19 다운로드](https://github.com/SeongMon/PadakKey/actions/runs/42547291581/artifacts/13643524456) | 다운로드한 압축 안의 `PadakKey-0.1.19-universal.zip`도 풀고, `PadakKey.app`을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows 0.1.19 다운로드](https://github.com/SeongMon/PadakKey/actions/runs/42547291512/artifacts/13643404565) | ZIP 전체를 새 폴더에 풀고 `PadakKey.exe` 실행. `Assets` 폴더를 실행 파일 옆에 유지 |
 
-Mac은 로컬 개발 인증서 서명이며 Apple 공증 전이고, Windows는 코드 서명 전인 미리보기입니다. 운영체제에서 게시자 확인 경고나 실행 제한이 나타날 수 있습니다. Windows 트레이 실제 사용 검증은 진행 중입니다.
+GitHub Actions 산출물 다운로드에는 GitHub 로그인이 필요하며, 보관 기간은 빌드 후 **30일**입니다. 링크가 만료되면 [Mac 빌드](https://github.com/SeongMon/PadakKey/actions/workflows/ci.yml) 또는 [Windows 빌드](https://github.com/SeongMon/PadakKey/actions/workflows/windows.yml)에서 최근 성공한 실행을 열고 **Artifacts**의 `PadakKey-macOS-universal` / `PadakKey-Windows-x64`를 선택하세요. [기존 공개 미리보기 릴리스](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.15)는 0.1.15로, 최신 화면과 기능이 포함되지 않습니다.
+
+Mac 자동 빌드는 ad-hoc 서명이고 Apple 공증 전이며, Windows는 코드 서명 전인 미리보기입니다. 운영체제에서 게시자 확인 경고나 실행 제한이 나타날 수 있습니다. 같은 Mac에서 직접 개발 빌드를 할 때는 아래의 고정 개발 인증서를 사용하세요.
 
 Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레이 칸 안에서 크기와 확대율을 조절합니다.
 
@@ -24,27 +28,74 @@ Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레�
 
 ### 아이콘 설정
 
-톱니바퀴 → **아이콘 선택**에서 **파닥이는 참새**, **조는 참새**를 선택할 수 있습니다. **애니메이션**을 켰을 때만 움직이고, 끄면 즉시 기본 자세로 돌아갑니다. 선택과 ON/OFF 상태는 재실행 후에도 유지됩니다.
+맥·윈도우 모두 톱니바퀴의 **아이콘 선택**에서 **파닥이는 참새**, **조는 참새**를 선택할 수 있습니다. Windows는 참새 미리보기가 있는 설정 창을 제공합니다. **애니메이션**을 켰을 때만 움직이고, 끄면 즉시 기본 자세로 돌아갑니다. 선택과 ON/OFF 상태는 재실행 후에도 유지됩니다.
 
-**아이콘 추가…**로 PNG 또는 GIF를 가져오면 사용자 아이콘 목록에 추가됩니다. 파일은 `~/Library/Application Support/PadakKey/Icons`에 복사됩니다. **아이콘 폴더 열기**로 직접 관리할 수도 있습니다. 정적 PNG는 항상 정지해 있고, GIF는 애니메이션 설정을 따릅니다. macOS의 동작 줄이기 설정이나 잠자기 중에는 애니메이션이 중지됩니다.
+**아이콘 추가**로 PNG 또는 GIF를 가져오면 사용자 아이콘 목록에 추가됩니다. 파일은 Mac의 `~/Library/Application Support/PadakKey/Icons`, Windows의 `%LOCALAPPDATA%\PadakKey\Icons`에 복사됩니다. **아이콘 폴더 열기**로 직접 관리할 수도 있습니다. 정적 PNG는 항상 정지해 있고, GIF는 애니메이션 설정을 따릅니다. macOS에서는 동작 줄이기 설정이나 잠자기 중에 애니메이션이 중지됩니다.
 
-맥 메뉴 막대에서 바로 확인하고 복사하는 오프라인 TOTP 인증 앱. macOS 13 이상, Apple Silicon / Intel 지원.
+| 아이콘 설정 | macOS | Windows |
+| --- | --- | --- |
+| 기본 크기 | 24pt | 트레이 칸 내부 100% |
+| 크기 선택 | 16 / 20 / 22 / 24pt | 60 / 75 / 90 / 100% |
+| 확대 · 여백 줄이기 | 100 / 125 / 150 / 175 / 200% | 100 / 125 / 150 / 175 / 200% |
 
-[GitHub 저장소](https://github.com/SeongMon/PadakKey) · [릴리스](https://github.com/SeongMon/PadakKey/releases)
-
-현재 초기 버전으로 Apple 공증 전입니다. 실사용 계정을 등록하기 전 테스트 계정으로 동작을 확인하세요.
+아이콘 원본의 여백 때문에 작게 보이면 확대율을 높이세요. 높은 배율에서는 가장자리가 잘릴 수 있습니다. 크기와 확대 설정은 각각 저장됩니다.
 
 ## 기능
 
-- 메뉴 막대의 참새 아이콘 → 계정별 현재 OTP와 만료까지 남은 시간. 현재 코드 옆에 다음 주기의 코드를 작고 회색으로 표시
-- 현재 코드 / **다음** 코드에 마우스를 올리면 같은 강조 효과 표시. 별도 복사 버튼 없이 숫자를 클릭해 복사 후 창 닫기. 아래에 ‘코드를 클릭하면 복사됩니다’ 안내 표시. 다음 코드는 다음 갱신 주기부터 사용. 30초 뒤 앱이 복사한 클립보드 내용만 삭제
-- QR 이미지(PNG/JPEG/TIFF/HEIC), `otpauth://totp` URI, Base32 인증 키 등록
+- 참새 아이콘을 누르면 계정별 현재 OTP와 갱신까지 남은 시간을 표시
+- 현재 코드 옆에 **다음** 갱신 코드를 작고 회색으로 표시. 다음 코드는 다음 갱신 주기부터 사용
+- 현재·다음 숫자에 같은 마우스 오버 강조 효과 적용. 별도 복사 버튼 없이 **숫자를 클릭하면 복사하고 창을 닫음**
+- 하단에 ‘코드를 클릭하면 복사됩니다’ 안내 표시. 복사 30초 후 클립보드가 다른 내용으로 바뀌지 않았을 때만 앱이 복사한 내용을 삭제
+- QR 이미지, `otpauth://totp` URI, Base32 인증 키로 계정 등록
 - SHA-1 / SHA-256 / SHA-512, 6·8자리, 사용자 지정 갱신 주기
-- 계정 검색, 삭제 확인, 로그인 시 자동 실행
-- macOS 로컬 로그인 키체인에 계정과 비밀 키 저장. 외부 패키지·서버·분석 SDK 없음
+- 계정 검색, 삭제 확인, 로그인 시 자동 실행, 사용자 PNG/GIF 아이콘
+- macOS 로그인 키체인 / Windows 현재 사용자 DPAPI로 계정과 인증 키 보호. 외부 서버나 자동 동기화 없음
 - 한국어 UI, 시스템 라이트/다크 모드
 
+### Windows Focus 화면
+
+<img src="docs/images/windows-focus.png" alt="PadakKey 0.1.19 Windows Focus 화면: 현재 코드, 회색 다음 코드, 클릭 복사 안내" width="370">
+
+테스트 계정으로 만든 화면입니다. 실제 계정이나 인증 키는 포함하지 않습니다.
+
+### 사용 방법
+
+1. Mac 메뉴 막대 또는 Windows 트레이의 **참새 아이콘**을 누릅니다.
+2. Mac의 **+**, Windows의 **OTP 추가**에서 서비스의 QR 이미지나 인증 키를 등록합니다.
+3. 큰 **현재 코드**를 클릭해 복사합니다. 작은 회색 **다음 코드**를 클릭하면 다음 주기의 코드를 복사합니다.
+4. 복사가 성공하면 상태창이 닫힙니다. 다시 확인하려면 참새 아이콘을 누릅니다.
+
+| 플랫폼별 항목 | macOS | Windows |
+| --- | --- | --- |
+| QR 이미지 | PNG / JPEG / TIFF / HEIC | PNG / JPEG / BMP / GIF |
+| 계정 보호 | 로컬 로그인 키체인 | 현재 Windows 사용자에 묶인 DPAPI |
+| 검색 | 서비스 또는 계정 검색 | 4개 이상이면 검색 표시, Ctrl+F로 열기 |
+| 계정 삭제 | 각 계정의 휴지통 | 각 계정의 `…` → 계정 삭제 |
+
 Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수 있습니다. 기존 앱의 계정에 자동 접근하거나 동기화하지 않습니다. Microsoft 푸시 승인, HOTP, Steam 특수 코드 및 Google Authenticator 일괄 이전(`otpauth-migration`) QR은 지원하지 않습니다.
+
+## 최근 변경
+
+### 0.1.19
+
+- 맥·윈도우 현재·다음 코드의 마우스 오버 효과 통일
+- 별도 복사 버튼과 아이콘 제거, 하단 클릭 복사 안내 추가
+- 숫자 클릭 복사와 복사 후 상태창 닫기 유지
+
+### 0.1.18
+
+- 맥·윈도우에 다음 갱신 코드 표시와 클릭 복사 추가
+- 6·8자리, 각 계정의 갱신 주기와 알고리즘에 맞춰 다음 코드 계산
+- 갱신 경계에서 다음 코드를 복사할 때 이전 주기의 미리보기를 복사하지 않도록 처리
+
+### Windows 0.1.16–0.1.17
+
+- Focus 상태창, 라이트·다크 화면, 참새 미리보기 설정 창 적용
+- 사용자 아이콘, 크기·확대, Windows 시작 시 실행 설정 제공
+- 복사 성공 시 창 닫기와 검색 시 트레이 기준 창 위치 유지
+
+<details>
+<summary>이전 변경 사항 · 0.1.8 이하</summary>
 
 ## 0.1.8 수정
 
@@ -92,7 +143,11 @@ Google/Microsoft Authenticator와 **동일한 표준 TOTP 키**를 등록할 수
 - 이미지 열기 실패, QR 없음, 잘못된 QR, Google 일괄 이전 QR을 구분해 안내합니다.
 - `bash scripts/verify-qr.sh`로 실제 PNG/JPEG/TIFF QR 디코딩과 오류 처리를 검증합니다.
 
-## 실행
+</details>
+
+## 소스에서 실행
+
+### macOS
 
 ```sh
 bash scripts/build.sh
@@ -101,11 +156,21 @@ open dist/PadakKey.app
 
 `dist/PadakKey.app`을 응용 프로그램 폴더에 복사하세요. Dock 아이콘이나 기본 창 없이 상단 메뉴 막대에 참새 아이콘이 나타납니다. 앱 메뉴의 톱니바퀴에서 종료할 수 있습니다.
 
-사이트의 보안 → 2단계 인증 → 인증 앱 등록 화면에서 QR 이미지를 저장하거나 수동 키를 복사합니다. BarOTP의 **+**에서 등록한 뒤, 생성된 코드를 사이트에 입력해 설정을 마무리하세요. 이미 등록된 서비스에서 키를 다시 보여주지 않으면 해당 서비스의 재설정 절차가 필요합니다. 복구 코드는 별도로 보관하세요. QR 이미지에도 비밀 키가 포함되므로 공유하거나 저장소에 커밋하지 마세요.
+사이트의 보안 → 2단계 인증 → 인증 앱 등록 화면에서 QR 이미지를 저장하거나 수동 키를 복사합니다. PadakKey의 **+**에서 등록한 뒤, 생성된 코드를 사이트에 입력해 설정을 마무리하세요. 이미 등록된 서비스에서 키를 다시 보여주지 않으면 해당 서비스의 재설정 절차가 필요합니다. 복구 코드는 별도로 보관하세요. QR 이미지에도 비밀 키가 포함되므로 공유하거나 저장소에 커밋하지 마세요.
+
+### Windows
+
+Windows와 .NET 10 SDK가 필요합니다. 소스에서 실행하려면 저장소 루트에서 다음 명령을 사용하세요.
+
+```powershell
+dotnet run --project Windows/PadakKey -c Release
+```
+
+배포용 실행 파일 생성, 검사, 데이터 위치는 [Windows 안내](Windows/README.md)를 참고하세요. ZIP 배포본에는 .NET 런타임이 포함되므로 SDK를 따로 설치하지 않아도 됩니다.
 
 ## 개발 / 검증
 
-Swift 5.9 이상 및 macOS SDK가 필요합니다. Swift Package이므로 Xcode 프로젝트 파일 없이 빌드할 수 있습니다.
+Mac 개발에는 Swift 5.9 이상 및 macOS SDK가 필요합니다. Swift Package이므로 Xcode 프로젝트 파일 없이 빌드할 수 있습니다. Windows 개발 명령은 [Windows 안내](Windows/README.md#개발--검사)에 정리되어 있습니다.
 
 ```sh
 swift test
@@ -115,50 +180,40 @@ ARCH=native bash scripts/build.sh  # 개발 중 현재 아키텍처만 빌드
 
 Command Line Tools만 설치되어 XCTest가 없으면 `bash scripts/verify-core.sh`로 동일한 코어 검증 케이스를 실행할 수 있습니다.
 
-테스트는 RFC 6238의 SHA-1/256/512 전체 18개 벡터, 6자리 코드, 시간 경계, Base32 검증, URI 오류 처리를 확인합니다.
+테스트는 RFC 6238의 SHA-1/256/512 전체 18개 벡터, 6·8자리 현재·다음 코드, 사용자 지정 갱신 주기와 시간 경계, Base32 검증, URI 오류 처리를 확인합니다. Windows 검사는 DPAPI 저장·복원, QR 이미지 해독, Focus 화면과 현재·다음 코드 클릭 후 닫기까지 확인합니다.
 
 수동 검증: 앱 실행 → 테스트용 계정 등록 → 다른 표준 인증기와 코드 비교 → 복사 → 다른 내용을 복사하면 덮어쓰지 않는지 확인 → 앱 재실행 후 계정 유지 확인 → 삭제 → 잠자기/잠금 및 자동 실행 확인. 실제 인증 키를 테스트 코드에 넣지 마세요.
 
 ## GitHub 배포
 
-이 폴더를 저장소 루트로 업로드합니다. `main` push 및 PR에서 테스트와 Universal 빌드가 실행됩니다. `v0.1.4`처럼 버전 태그를 push하면 ZIP과 SHA-256 체크섬이 첨부된 **초안 Release**를 만듭니다. 확인 후 GitHub에서 게시하세요.
+`main` push 및 PR에서 맥·윈도우 검사와 빌드가 실행됩니다. 성공한 실행의 **Artifacts**에서 설치 파일을 받을 수 있으며, 보관 기간은 30일입니다.
 
-```sh
-git init -b main
-git add .
-git commit -m "Build BarOTP menu bar authenticator"
-git remote add origin https://github.com/SeongMon/PadakKey.git
-git push -u origin main
-git tag v0.1.4
-git push origin v0.1.4
-```
+| 빌드 | 산출물 이름 | 포함 파일 |
+| --- | --- | --- |
+| [macOS Universal](https://github.com/SeongMon/PadakKey/actions/workflows/ci.yml) | `PadakKey-macOS-universal` | 앱 ZIP과 SHA-256 체크섬 |
+| [Windows x64](https://github.com/SeongMon/PadakKey/actions/workflows/windows.yml) | `PadakKey-Windows-x64` | `PadakKey.exe`, `Assets/` |
+
+`v0.1.19` 같은 버전 태그를 push하면 현재 Release 워크플로가 **macOS ZIP과 SHA-256 체크섬이 첨부된 초안 Release**를 만듭니다. Windows 산출물은 별도 Windows 빌드에서 받습니다. `main`에 커밋하는 것만으로 공개 Release가 게시되지는 않습니다.
 
 기본 CI 산출물은 ad-hoc 서명이며 Apple Developer ID 서명·공증이 없습니다. 다운로드한 앱은 Gatekeeper가 차단할 수 있습니다. 출처와 체크섬을 확인한 사용자만 시스템 설정 → 개인정보 보호 및 보안에서 macOS가 제공하는 열기 절차를 이용하세요. Gatekeeper 전체를 비활성화하지 마세요.
 
 일반 사용자 배포에는 Apple Developer ID 인증서와 공증을 권장합니다. 인증서를 로컬 키체인에 설치하고 `xcrun notarytool store-credentials`로 공증 프로필을 만든 뒤:
 
 ```sh
-VERSION=0.1.4 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NOTARY_PROFILE='barotp-notary' bash scripts/build.sh
+VERSION=0.1.19 SIGNING_IDENTITY='Developer ID Application: YOUR NAME (TEAMID)' NOTARY_PROFILE='barotp-notary' bash scripts/build.sh
 ```
 
 이 명령은 hardened runtime 서명 → 공증 → staple → ZIP 재생성까지 수행합니다. 생성된 ZIP/체크섬으로 초안 Release의 파일을 교체하고 게시하세요. 인증서·암호·API 키는 저장소에 올리지 마세요. CI 서명 자동화는 조직의 GitHub Secrets와 인증서 정책에 맞춰 별도로 연결해야 합니다.
 
 ## 보안과 제한
 
-- 비밀 키와 계정 메타데이터는 Security.framework의 로컬 로그인 키체인 항목 하나에 JSON으로 저장합니다. 평문 설정 파일·UserDefaults에는 저장하지 않습니다. iCloud 동기화를 요청하지 않습니다.
-- 팝오버가 닫히거나 세션 비활성화·잠자기·화면 잠금 알림이 오면 메모리의 계정 목록을 비웁니다. Swift 문자열의 메모리 완전 소거를 보장하지 않습니다.
+- macOS: 비밀 키와 계정 메타데이터는 Security.framework의 로컬 로그인 키체인 항목 하나에 JSON으로 저장합니다. 평문 설정 파일·UserDefaults에는 저장하지 않습니다. iCloud 동기화를 요청하지 않습니다.
+- Windows: `%LOCALAPPDATA%\PadakKey\accounts.dpapi`에 현재 사용자 DPAPI로 암호화해 저장합니다. 다른 사용자나 PC로 파일만 복사해 복구할 수 없습니다. 프로그램 업데이트 시 이 계정 파일을 덮어쓰지 마세요.
+- macOS에서는 팝오버가 닫히거나 세션 비활성화·잠자기·화면 잠금 알림이 오면 메모리의 계정 목록을 비웁니다. Swift 문자열의 메모리 완전 소거를 보장하지 않습니다. Windows에서는 상태창을 닫거나 화면을 잠그면 표시 중인 계정 목록을 비웁니다.
 - 앱 자체의 Touch ID 잠금은 없습니다. 로그인된 Mac에 접근 가능한 사용자는 코드를 볼 수 있습니다. 로컬 로그인 키체인의 보호 및 접근 제어에 의존합니다.
 - 클립보드 관리자에는 비밀/임시 콘텐츠 힌트를 제공하지만 모든 앱이 이를 준수하지는 않습니다. 앱이 강제 종료되면 30초 뒤 삭제가 실행되지 않을 수 있습니다.
 - ad-hoc 재빌드나 서명 변경 시 키체인이 접근 승인을 다시 요구할 수 있습니다. 정식 배포에서는 bundle ID와 Developer ID를 유지하세요.
 - 자동 동기화·키 내보내기·백업·자동 업데이트는 없습니다. 앱 삭제만으로 키체인의 계정이 삭제되지는 않습니다. 계정 제거는 앱에서 진행하세요.
-- Mac의 날짜/시간이 틀리면 코드가 맞지 않을 수 있습니다.
+- PC의 날짜/시간이 틀리면 코드가 맞지 않을 수 있습니다.
 
 참고: [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238), [Apple Keychain services](https://developer.apple.com/documentation/security/keychain-services).
-
-### Windows 미리보기
-
-Windows 트레이 버전의 실행 방법, CI 다운로드, 실제 기기 검사 목록은 [Windows/README.md](Windows/README.md)를 참고하세요. 두 참새 모션, 애니메이션 ON/OFF, 아이콘 추가와 크기 조절을 제공합니다.
-
-Mac에서는 톱니바퀴 → **아이콘 크기**에서 16/20/22/24pt를 선택할 수 있습니다. 메뉴 막대 높이를 넘는 이미지는 macOS가 맞춰 표시합니다.
-
-아이콘 원본의 여백 때문에 작게 보이면 Mac/Windows의 **아이콘 확대 (여백 줄이기)**에서 100~200%를 선택하세요. 트레이 칸 안에서 이미지를 확대하므로 높은 배율에서는 가장자리가 잘릴 수 있습니다. 기본 크기와 확대 설정은 각각 저장됩니다.
