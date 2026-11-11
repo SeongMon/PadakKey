@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.20"
+        item.button?.toolTip = "PadakKey 0.1.21"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -227,12 +227,18 @@ struct MainView: View {
                         closeAfterCopy()
                     }
                 } label: {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 4) {
                             Text("현재").font(.system(size: 11, weight: .semibold))
                             Spacer(minLength: 0)
-                            Text("\(remaining)초").font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .foregroundStyle(remaining <= 5 ? Color.orange : Color.teal)
+                            ZStack {
+                                Circle().stroke(.quaternary, lineWidth: 2)
+                                Circle().trim(from: 0, to: Double(remaining) / Double(account.period))
+                                    .stroke(remaining <= 5 ? Color.orange : Color.teal, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                                    .rotationEffect(.degrees(-90))
+                                Text("\(remaining)").font(.system(size: 9, weight: .medium, design: .monospaced))
+                            }.frame(width: 22, height: 22)
+                                .accessibilityLabel("남은 시간 \(remaining)초")
                         }
                         Text(formattedCode(code))
                             .font(.system(size: account.digits == 8 ? 21 : 25, weight: .semibold, design: .monospaced))
@@ -247,8 +253,8 @@ struct MainView: View {
                         closeAfterCopy()
                     }
                 } label: {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("다음").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("다음").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).frame(height: 22)
                         Text(formattedCode(nextCode))
                             .font(.system(size: account.digits == 8 ? 21 : 25, weight: .medium, design: .monospaced))
                             .lineLimit(1).minimumScaleFactor(0.7)
