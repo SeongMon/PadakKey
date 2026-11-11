@@ -4,16 +4,16 @@
 
 ## 다운로드
 
-현재 버전은 **0.1.19**입니다. 아래는 검사와 빌드가 통과한 해당 버전의 설치 파일입니다.
+최신 공개 패키지: **Mac 0.1.22 / Windows 0.1.19** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.22)
 
 | 운영체제 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| macOS 13+ · Apple Silicon / Intel | [Mac 0.1.19 다운로드](https://github.com/SeongMon/PadakKey/actions/runs/42547291581/artifacts/13643524456) | 다운로드한 압축 안의 `PadakKey-0.1.19-universal.zip`도 풀고, `PadakKey.app`을 응용 프로그램 폴더로 이동 |
-| Windows 11 · x64 | [Windows 0.1.19 다운로드](https://github.com/SeongMon/PadakKey/actions/runs/42547291512/artifacts/13643404565) | ZIP 전체를 새 폴더에 풀고 `PadakKey.exe` 실행. `Assets` 폴더를 실행 파일 옆에 유지 |
+| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.22/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.22/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
 
-GitHub Actions 산출물 다운로드에는 GitHub 로그인이 필요하며, 보관 기간은 빌드 후 **30일**입니다. 링크가 만료되면 [Mac 빌드](https://github.com/SeongMon/PadakKey/actions/workflows/ci.yml) 또는 [Windows 빌드](https://github.com/SeongMon/PadakKey/actions/workflows/windows.yml)에서 최근 성공한 실행을 열고 **Artifacts**의 `PadakKey-macOS-universal` / `PadakKey-Windows-x64`를 선택하세요. [기존 공개 미리보기 릴리스](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.15)는 0.1.15로, 최신 화면과 기능이 포함되지 않습니다.
+공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. 이번 Mac 버전에는 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드가 포함됩니다. Windows는 검증된 0.1.19 패키지를 유지합니다.
 
-Mac 자동 빌드는 ad-hoc 서명이고 Apple 공증 전이며, Windows는 코드 서명 전인 미리보기입니다. 운영체제에서 게시자 확인 경고나 실행 제한이 나타날 수 있습니다. 같은 Mac에서 직접 개발 빌드를 할 때는 아래의 고정 개발 인증서를 사용하세요.
+Mac 패키지는 고정 로컬 개발 인증서 서명이며 Apple 공증 전이고, Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
 
 Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레이 칸 안에서 크기와 확대율을 조절합니다.
 

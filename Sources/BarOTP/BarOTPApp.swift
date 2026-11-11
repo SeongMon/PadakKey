@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.21"
+        item.button?.toolTip = "PadakKey 0.1.22"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -260,6 +260,8 @@ struct MainView: View {
                             .lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                         .padding(10).frame(height: 76)
+                    .foregroundStyle(.secondary)
+                    .background(Color.gray.opacity(0.07), in: RoundedRectangle(cornerRadius: 9))
                 }.buttonStyle(OTPCodeButtonStyle()).disabled(nextCode == nil)
                     .help("다음 갱신 코드 복사 · 다음 주기부터 사용할 수 있습니다")
                     .accessibilityLabel("다음 인증 코드 복사")
