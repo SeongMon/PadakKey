@@ -35,7 +35,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.19"
+        item.button?.toolTip = "PadakKey 0.1.20"
         item.button?.target = self
         item.button?.action = #selector(togglePopover)
         statusItem = item
@@ -93,7 +93,7 @@ struct MainView: View {
         if vault.needsAuthorization || vault.error != nil { return 310 }
         if !vault.loaded { return 210 }
         if vault.accounts.isEmpty { return 350 }
-        return 168 + CGFloat(min(3, max(1, visibleAccounts.count))) * 112
+        return 168 + CGFloat(min(3, max(1, visibleAccounts.count))) * 144
     }
     var authorize: () -> Void
     var closeAfterCopy: () -> Void
@@ -203,6 +203,10 @@ struct MainView: View {
         } message: { Text("이 Mac에서만 삭제됩니다. 다른 인증 수단이나 복구 코드가 있는지 확인하세요.") }
     }
     private func clearSession() { registration.close(); vault.clear(); Clipboard.shared.clear() }
+    private func formattedCode(_ code: String?) -> String {
+        guard let code else { return "—" }
+        return String(code.prefix(code.count / 2)) + " " + String(code.suffix(code.count / 2))
+    }
     private func accountRow(_ account: OTPAccount, at date: Date) -> some View {
         let code = try? account.code(at: date)
         let nextCode = try? account.nextCode(at: date)
@@ -216,36 +220,43 @@ struct MainView: View {
                 Spacer()
                 Button(role: .destructive) { deleting = account } label: { Image(systemName: "trash").font(.caption) }.buttonStyle(.plain).foregroundStyle(.secondary).help("계정 삭제")
             }
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(spacing: 10) {
                 Button {
                     if let current = try? account.code() {
                         Clipboard.shared.copy(current)
                         closeAfterCopy()
                     }
                 } label: {
-                    Text(code.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "오류")
-                        .font(.system(size: account.digits == 8 ? 25 : 29, weight: .medium, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.8).foregroundStyle(.primary)
-                }.buttonStyle(OTPCodeButtonStyle()).disabled(code == nil).help("현재 OTP 복사").accessibilityLabel("현재 인증 코드 복사")
-                Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 4) {
+                            Text("현재").font(.system(size: 11, weight: .semibold))
+                            Spacer(minLength: 0)
+                            Text("\(remaining)초").font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundStyle(remaining <= 5 ? Color.orange : Color.teal)
+                        }
+                        Text(formattedCode(code))
+                            .font(.system(size: account.digits == 8 ? 21 : 25, weight: .semibold, design: .monospaced))
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10).frame(height: 76)
+                }.buttonStyle(OTPCodeButtonStyle()).disabled(code == nil)
+                    .help("현재 인증 코드 복사").accessibilityLabel("현재 인증 코드 복사")
                 Button {
                     if let next = try? account.nextCode() {
                         Clipboard.shared.copy(next)
                         closeAfterCopy()
                     }
                 } label: {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("다음").font(.system(size: 10))
-                        Text(nextCode.map { String($0.prefix($0.count/2)) + " " + String($0.suffix($0.count/2)) } ?? "—")
-                            .font(.system(size: account.digits == 8 ? 15 : 18, weight: .regular, design: .monospaced)).lineLimit(1)
-                    }.foregroundStyle(.secondary)
-                }.buttonStyle(OTPCodeButtonStyle()).disabled(nextCode == nil).fixedSize()
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("다음").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
+                        Text(formattedCode(nextCode))
+                            .font(.system(size: account.digits == 8 ? 21 : 25, weight: .medium, design: .monospaced))
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10).frame(height: 76)
+                }.buttonStyle(OTPCodeButtonStyle()).disabled(nextCode == nil)
                     .help("다음 갱신 코드 복사 · 다음 주기부터 사용할 수 있습니다")
                     .accessibilityLabel("다음 인증 코드 복사")
-                ZStack {
-                    Circle().stroke(.quaternary, lineWidth: 3)
-                    Circle().trim(from: 0, to: Double(remaining)/Double(account.period)).stroke(remaining <= 5 ? Color.orange : Color.teal, style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))
-                    Text("\(remaining)").font(.system(size: 10, weight: .medium, design: .monospaced))
-                }.frame(width: 30, height: 30)
             }
         }.padding(14).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 12))
     }
@@ -257,9 +268,9 @@ private struct OTPCodeButtonStyle: ButtonStyle {
         @State private var isHovered = false
         var body: some View {
             configuration.label
-                .padding(.horizontal, 4).padding(.vertical, 3)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(configuration.isPressed ? 0.12 : (isHovered ? 0.06 : 0))))
-                .contentShape(RoundedRectangle(cornerRadius: 6))
+                .background(RoundedRectangle(cornerRadius: 9).fill(Color.primary.opacity(configuration.isPressed ? 0.16 : (isHovered ? 0.10 : 0.04))))
+                .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color.primary.opacity(0.12), lineWidth: 1))
+                .contentShape(RoundedRectangle(cornerRadius: 9))
                 .onHover { isHovered = $0 }
         }
     }

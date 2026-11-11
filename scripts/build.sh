@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-0.1.19}"
+VERSION="${VERSION:-0.1.20}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION must be x.y.z'; exit 1; }
 ARCH="${ARCH:-universal}"
 # Sign outside cloud/file-provider folders, which may inject Finder metadata.
