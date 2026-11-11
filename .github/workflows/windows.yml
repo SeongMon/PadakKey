@@ -39,3 +39,13 @@ jobs:
           name: PadakKey-Windows-x64
           path: artifacts/PadakKey-Windows-x64/
           retention-days: 30
+      - name: Render synthetic UI previews
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath artifacts/PadakKey-Windows-x64/PadakKey.exe -ArgumentList '--ui-preview', 'artifacts/ui-preview' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "UI preview failed: $($p.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows-UI-preview
+          path: artifacts/ui-preview/
+          retention-days: 7

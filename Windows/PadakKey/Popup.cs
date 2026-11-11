@@ -108,7 +108,7 @@ internal sealed class Popup : FocusForm
     {
         int inset = Px(24), contentWidth = ClientSize.Width - 2 * inset;
         int top = Px(64) + (searchShown ? Px(46) : 0);
-        int requested = codeRows.Count == 0 ? Px(214) : Px(228) + Math.Min(codeRows.Count - 1, 2) * Px(112);
+        int requested = codeRows.Count == 0 ? Px(214) : Px(228) + Math.Min(codeRows.Count - 1, 2) * Px(148);
         int maxHeight = Screen.FromPoint(anchor).WorkingArea.Height - Px(32);
         int body = Math.Max(Px(80), Math.Min(requested, maxHeight - top - Px(64)));
         if (resize) { preparing = true; ClientSize = new Size(Px(370), top + body + Px(64)); preparing = false; contentWidth = ClientSize.Width - 2 * inset; }
@@ -119,7 +119,7 @@ internal sealed class Popup : FocusForm
         search.SetBounds(Px(10), Px(7), contentWidth - Px(20), Px(23));
         rows.SetBounds(inset, top, contentWidth, body);
         int rowWidth = contentWidth - (codeRows.Count > 3 ? SystemInformation.VerticalScrollBarWidth : 0);
-        foreach (var row in codeRows) row.Size = new Size(rowWidth, Px(row.Featured ? 228 : 112));
+        foreach (var row in codeRows) row.Size = new Size(rowWidth, Px(row.Featured ? 228 : 148));
         empty.Size = new Size(contentWidth, body);
         addButton.SetBounds(inset - Px(4), ClientSize.Height - Px(48), Px(106), Px(32));
         footerNote.SetBounds(ClientSize.Width - inset - Px(190), ClientSize.Height - Px(48), Px(190), Px(32));
@@ -144,10 +144,8 @@ internal sealed class OtpRow : Panel
     private readonly Label service, name;
     private readonly FocusButton more;
     private readonly OtpCodeButton code, nextCode;
-    private readonly Countdown countdown;
     private readonly Action<string> copy;
     private readonly Func<long> timeSource;
-    private readonly Label? refresh;
     public bool Featured { get; }
     private int Px(int value) => (int)Math.Round(value * DeviceDpi / 96f);
     public OtpRow(FocusTheme theme, Account account, bool featured, Action<string> copy, Action delete, Func<long>? timeSource = null)
@@ -157,15 +155,13 @@ internal sealed class OtpRow : Panel
         DoubleBuffered = true; Margin = Padding.Empty; BackColor = theme.Surface;
         service = new Label { Text = account.Issuer.Length > 0 ? account.Issuer : "인증 계정", AutoEllipsis = true, Font = theme.Font(featured ? 10 : 9, FontStyle.Bold), ForeColor = theme.Text };
         name = new Label { Text = account.Name, AutoEllipsis = true, Font = theme.Font(8), ForeColor = theme.Muted };
-        code = new OtpCodeButton(theme) { Font = new Font("Consolas", featured ? (account.Digits == 8 ? 25 : 29) : (account.Digits == 8 ? 15 : 19)), AccessibleName = service.Text + " 현재 OTP 복사" };
+        code = new OtpCodeButton(theme) { Font = new Font("Consolas", account.Digits == 8 ? 15 : 19), AccessibleName = service.Text + " 현재 OTP 복사" };
         code.Click += (_, _) => CopyCode();
-        nextCode = new OtpCodeButton(theme, next: true) { Font = new Font("Consolas", account.Digits == 8 ? 12 : 14), AccessibleName = service.Text + " 다음 OTP 복사", AccessibleDescription = "다음 갱신 주기부터 사용할 수 있는 코드를 복사합니다." };
+        nextCode = new OtpCodeButton(theme, next: true) { Font = new Font("Consolas", account.Digits == 8 ? 15 : 19), AccessibleName = service.Text + " 다음 OTP 복사", AccessibleDescription = "다음 갱신 주기부터 사용할 수 있는 코드를 복사합니다." };
         nextCode.Click += (_, _) => CopyCode(next: true);
         more = new FocusButton(theme) { Glyph = FocusDraw.More, Quiet = true, AccessibleName = service.Text + " 계정 관리" };
         more.Click += (_, _) => { var menu = new ContextMenuStrip { Font = theme.Font() }; menu.Items.Add("계정 삭제…", null, (_, _) => delete()); menu.Closed += (_, _) => menu.Dispose(); menu.Show(more, new Point(0, more.Height)); };
-        countdown = new Countdown(theme) { TabStop = false };
-        if (featured) refresh = new Label { Text = "초 후 갱신", Font = theme.Font(8), ForeColor = theme.Muted, TextAlign = ContentAlignment.MiddleLeft };
-        Controls.AddRange([service, name, code, nextCode, more, countdown]); if (refresh != null) Controls.Add(refresh);
+        Controls.AddRange([service, name, code, nextCode, more]);
     }
     private void CopyCode(bool next = false)
     {
@@ -180,18 +176,16 @@ internal sealed class OtpRow : Panel
             service.TextAlign = name.TextAlign = ContentAlignment.MiddleCenter;
             service.SetBounds(Px(24), Px(66), Width - Px(48), Px(23));
             name.SetBounds(Px(14), Px(90), Width - Px(28), Px(20));
-            code.SetBounds(0, Px(116), Width - Px(120), Px(52)); nextCode.SetBounds(Width - Px(112), Px(121), Px(112), Px(43));
-            int left = Math.Max(0, (Width - Px(102)) / 2);
-            countdown.SetBounds(left, Px(182), Px(28), Px(28));
-            refresh!.SetBounds(left + Px(32), Px(179), Px(70), Px(35)); more.SetBounds(Width - Px(25), Px(8), Px(25), Px(25));
+            more.SetBounds(Width - Px(25), Px(8), Px(25), Px(25));
         }
         else
         {
-            service.SetBounds(0, Px(14), Width - Px(74), Px(20)); name.SetBounds(0, Px(36), Width - Px(56), Px(18));
-            countdown.SetBounds(Width - Px(61), Px(18), Px(28), Px(28)); more.SetBounds(Width - Px(25), Px(19), Px(25), Px(25));
-            code.SetBounds(0, Px(60), Width - Px(120), Px(36));
-            nextCode.SetBounds(Width - Px(112), Px(57), Px(112), Px(43));
+            service.SetBounds(0, Px(14), Width - Px(32), Px(20)); name.SetBounds(0, Px(36), Width - Px(32), Px(18));
+            more.SetBounds(Width - Px(25), Px(19), Px(25), Px(25));
         }
+        int cardWidth = (Width - Px(10)) / 2, top = Px(Featured ? 116 : 60);
+        code.SetBounds(0, top, cardWidth, Px(76));
+        nextCode.SetBounds(cardWidth + Px(10), top, cardWidth, Px(76));
     }
     public void UpdateCode(long now)
     {
@@ -201,7 +195,7 @@ internal sealed class OtpRow : Panel
             if (code.Text != grouped) code.Text = grouped;
             string following = account.NextCode(now); string groupedNext = following.Insert(following.Length / 2, " ");
             if (nextCode.Text != groupedNext) nextCode.Text = groupedNext;
-            countdown.UpdateTime(account.Period - (int)(now % account.Period), account.Period);
+            code.UpdateTime(account.Period - (int)(now % account.Period), account.Period);
         }
         catch { code.Text = "코드 오류"; code.Enabled = nextCode.Enabled = false; }
     }
@@ -223,26 +217,42 @@ internal sealed class OtpCodeButton : Button
 {
     private readonly FocusTheme theme;
     private bool hover;
+    private int seconds = 30, period = 30;
     internal bool IsNext { get; }
+    internal Rectangle TimerBounds => IsNext ? Rectangle.Empty : new Rectangle(Width - Px(34), Px(7), Px(26), Px(26));
+    private int Px(int n) => (int)Math.Round(n * DeviceDpi / 96f);
+    internal void UpdateTime(int remaining, int duration)
+    {
+        if (seconds == remaining && period == duration) return;
+        seconds = remaining; period = duration;
+        AccessibleDescription = $"{remaining}초 후 코드 갱신. 박스를 누르면 복사합니다.";
+        Invalidate();
+    }
     public OtpCodeButton(FocusTheme theme, bool next = false)
     {
         this.theme = theme; IsNext = next; Text = "—"; Cursor = Cursors.Hand; FlatStyle = FlatStyle.Flat;
-        FlatAppearance.BorderSize = 0; BackColor = theme.Surface; ForeColor = next ? theme.Muted : theme.Text; UseVisualStyleBackColor = false;
+        FlatAppearance.BorderSize = 0; BackColor = next ? theme.Soft : theme.Surface; ForeColor = next ? theme.Muted : theme.Text; UseVisualStyleBackColor = false;
         SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
     }
     protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
     protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
     protected override void OnPaint(PaintEventArgs e)
     {
-        int Px(int n) => (int)Math.Round(n * DeviceDpi / 96f);
         var g = e.Graphics; g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias; g.Clear(theme.Surface);
-        if (hover) FocusDraw.Fill(g, ClientRectangle, Px(7), theme.Soft);
-        if (IsNext)
+        FocusDraw.Fill(g, ClientRectangle, Px(9), hover ? theme.Line : BackColor);
+        using var path = FocusDraw.Round(new RectangleF(.5f, .5f, Width - 1, Height - 1), Px(9));
+        using var border = new Pen(theme.Line); g.DrawPath(border, path);
+        TextRenderer.DrawText(g, IsNext ? "다음" : "현재", theme.Font(8), new Rectangle(Px(10), Px(8), Width - Px(50), Px(24)), theme.Muted, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(g, Text, Font, new Rectangle(Px(10), Px(35), Width - Px(20), Px(33)), Enabled ? ForeColor : theme.Muted, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        if (!IsNext)
         {
-            TextRenderer.DrawText(g, "다음", theme.Font(7), new Rectangle(Px(3), Px(2), Width - Px(6), Px(14)), theme.Muted, TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
-            TextRenderer.DrawText(g, Text, Font, new Rectangle(Px(3), Px(16), Width - Px(6), Height - Px(17)), theme.Muted, TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            var bounds = TimerBounds; float scale = DeviceDpi / 96f;
+            var ring = new RectangleF(bounds.X + 2 * scale, bounds.Y + 2 * scale, bounds.Width - 4 * scale, bounds.Height - 4 * scale);
+            using var track = new Pen(theme.Line, 1.5f * scale);
+            using var arc = new Pen(seconds <= 5 ? theme.Warning : theme.Accent, 1.5f * scale);
+            g.DrawEllipse(track, ring); g.DrawArc(arc, ring, -90, 360f * seconds / period);
+            TextRenderer.DrawText(g, seconds.ToString(), theme.Font(seconds > 99 ? 6.5f : 7.5f), bounds, theme.Muted, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
         }
-        else TextRenderer.DrawText(g, Text, Font, new Rectangle(Px(3), 0, Width - Px(6), Height), Enabled ? theme.Text : theme.Muted, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
-        if (Focused && ShowFocusCues) ControlPaint.DrawFocusRectangle(g, ClientRectangle, theme.Accent, theme.Surface);
+        if (Focused && ShowFocusCues) ControlPaint.DrawFocusRectangle(g, Rectangle.Inflate(ClientRectangle, -Px(3), -Px(3)), theme.Accent, BackColor);
     }
 }

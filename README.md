@@ -4,14 +4,14 @@
 
 ## 다운로드
 
-최신 공개 패키지: **Mac 0.1.22 / Windows 0.1.19** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.22)
+최신 공개 패키지: **Mac 0.1.22 / Windows 0.1.23** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.23)
 
 | 운영체제 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.22/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
-| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.22/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
+| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.23/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.23/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
 
-공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. 이번 Mac 버전에는 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드가 포함됩니다. Windows는 검증된 0.1.19 패키지를 유지합니다.
+공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. Mac과 Windows 모두 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드를 제공합니다. 이번 릴리스는 Windows를 0.1.23으로 업데이트하며 Mac은 검증된 0.1.22 패키지를 유지합니다.
 
 Mac 패키지는 고정 로컬 개발 인증서 서명이며 Apple 공증 전이고, Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
 
@@ -43,8 +43,8 @@ Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레�
 ## 기능
 
 - 참새 아이콘을 누르면 계정별 현재 OTP와 갱신까지 남은 시간을 표시
-- 현재 코드 옆에 **다음** 갱신 코드를 작고 회색으로 표시. 다음 코드는 다음 갱신 주기부터 사용
-- 현재·다음 숫자에 같은 마우스 오버 강조 효과 적용. 별도 복사 버튼 없이 **숫자를 클릭하면 복사하고 창을 닫음**
+- 현재 코드 옆에 **다음** 갱신 코드를 같은 크기의 회색 박스로 표시. 다음 코드는 다음 갱신 주기부터 사용
+- 현재·다음 숫자에 같은 마우스 오버 강조 효과 적용. 별도 복사 버튼 없이 **박스 어디를 클릭해도 복사하고 창을 닫음**
 - 하단에 ‘코드를 클릭하면 복사됩니다’ 안내 표시. 복사 30초 후 클립보드가 다른 내용으로 바뀌지 않았을 때만 앱이 복사한 내용을 삭제
 - QR 이미지, `otpauth://totp` URI, Base32 인증 키로 계정 등록
 - SHA-1 / SHA-256 / SHA-512, 6·8자리, 사용자 지정 갱신 주기
@@ -62,7 +62,7 @@ Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레�
 
 1. Mac 메뉴 막대 또는 Windows 트레이의 **참새 아이콘**을 누릅니다.
 2. Mac의 **+**, Windows의 **OTP 추가**에서 서비스의 QR 이미지나 인증 키를 등록합니다.
-3. 큰 **현재 코드**를 클릭해 복사합니다. 작은 회색 **다음 코드**를 클릭하면 다음 주기의 코드를 복사합니다.
+3. **현재 코드 박스**를 클릭해 복사합니다. 회색 **다음 코드 박스**를 클릭하면 다음 주기의 코드를 복사합니다.
 4. 복사가 성공하면 상태창이 닫힙니다. 다시 확인하려면 참새 아이콘을 누릅니다.
 
 | 플랫폼별 항목 | macOS | Windows |

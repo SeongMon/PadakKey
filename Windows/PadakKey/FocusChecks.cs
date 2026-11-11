@@ -40,6 +40,11 @@ internal static class FocusChecks
         using (var row = new OtpRow(new FocusTheme(false), Examples[0], true, _ => { }, () => { }))
         {
             row.Size = new Size(322, 228); row.UpdateCode(29);
+            var buttons = row.Controls.OfType<OtpCodeButton>().ToArray();
+            var current = buttons.Single(b => !b.IsNext); var next = buttons.Single(b => b.IsNext);
+            if (current.Size != next.Size || current.Bounds.IntersectsWith(next.Bounds)) throw new Exception("OTP boxes must be equal and separate");
+            if (!current.ClientRectangle.Contains(current.TimerBounds) || !next.TimerBounds.IsEmpty) throw new Exception("Countdown must be inside current box only");
+            if (next.ForeColor != new FocusTheme(false).Muted || next.BackColor != new FocusTheme(false).Soft) throw new Exception("Next box must be gray");
             string before = string.Join(" ", row.Controls.OfType<OtpCodeButton>().Select(button => button.Text));
             row.UpdateCode(30); string after = string.Join(" ", row.Controls.OfType<OtpCodeButton>().Select(button => button.Text));
             if (before == after) throw new Exception("Displayed OTP did not refresh across a period boundary");
@@ -58,7 +63,7 @@ internal static class FocusChecks
         long currentTime = 29; string? copiedNext = null;
         using (var row = new OtpRow(new FocusTheme(false), Examples[0], false, value => copiedNext = value, () => { }, () => currentTime))
         {
-            using var form = new FocusForm { PreviewMode = true, TopMost = false, Location = new Point(-30000, -30000), ClientSize = new Size(322, 112) };
+            using var form = new FocusForm { PreviewMode = true, TopMost = false, Location = new Point(-30000, -30000), ClientSize = new Size(322, 148) };
             row.Dock = DockStyle.Fill; form.Controls.Add(row); form.Show(); row.UpdateCode(currentTime);
             string expected = Examples[0].Code(30); if (row.Controls.OfType<OtpCodeButton>().Single(button => button.IsNext).Text.Replace(" ", "") != expected) throw new Exception("Next preview incorrect");
             currentTime = 30; row.Controls.OfType<OtpCodeButton>().Single(button => button.IsNext).PerformClick();
