@@ -54,7 +54,7 @@ Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레�
 
 ### Windows Focus 화면
 
-<img src="docs/images/windows-focus.png" alt="PadakKey 0.1.19 Windows Focus 화면: 현재 코드, 회색 다음 코드, 클릭 복사 안내" width="370">
+<img src="docs/images/windows-focus.png" alt="PadakKey 0.1.23 Windows Focus 화면: 현재 코드, 회색 다음 코드, 클릭 복사 안내" width="370">
 
 테스트 계정으로 만든 화면입니다. 실제 계정이나 인증 키는 포함하지 않습니다.
 

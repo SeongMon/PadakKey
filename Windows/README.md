@@ -20,7 +20,7 @@ Windows 11 x64용 트레이 앱입니다. Windows 10은 현재 실제 기기 검
 
 두 숫자에 마우스를 올리면 같은 강조 효과가 표시됩니다. 별도 복사 버튼 없이 하단에 ‘코드를 클릭하면 복사됩니다’ 안내를 표시하며, 어느 쪽이든 복사 성공 직후 상태창이 닫힙니다. 바깥 클릭이나 Esc로도 닫습니다. 복사 30초 후 클립보드 내용이 다른 앱에 의해 바뀌지 않았을 때만 지웁니다.
 
-<img src="../docs/images/windows-focus.png" alt="PadakKey 0.1.19 Windows Focus 상태창의 테스트 계정 화면" width="370">
+<img src="../docs/images/windows-focus.png" alt="PadakKey 0.1.23 Windows Focus 상태창의 테스트 계정 화면" width="370">
 
 테스트 계정으로 만든 화면입니다. 실제 계정이나 인증 키는 포함하지 않습니다.
 
