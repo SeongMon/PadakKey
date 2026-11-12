@@ -26,7 +26,7 @@ internal sealed class TrayApp : ApplicationContext
     [DllImport("user32.dll")] private static extern uint GetClipboardSequenceNumber();
     public TrayApp()
     {
-        mascot = new(tray, settings); popup = new(storage, Copy, Add, ShowSettings, () => settings.Icon);
+        mascot = new(tray, settings); popup = new(storage, Copy, Add, ShowSettings, () => settings.Icon, startupEnabled: () => StartupRegistration.Enabled, setStartup: StartupRegistration.Set);
         tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) { if (popup.Visible) popup.Hide(); else popup.Open(); } };
         clearTimer.Tick += (_, _) => ClearClipboard(); RebuildMenu();
         Microsoft.Win32.SystemEvents.SessionSwitch += SessionChanged;
@@ -88,7 +88,7 @@ internal sealed class TrayApp : ApplicationContext
     {
         var old = tray.ContextMenuStrip; var menu = new ContextMenuStrip { Font = new Font("Segoe UI", 9) };
         menu.Items.Add("인증 코드 열기", null, (_, _) => popup.Open());
-        menu.Items.Add("설정 및 아이콘 변경…", null, (_, _) => ShowSettings()); menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("설정 및 아이콘 변경…", null, (_, _) => AfterMenuCloses(ShowSettings)); menu.Items.Add(new ToolStripSeparator());
         var animation = new ToolStripMenuItem("애니메이션") { Checked = settings.Animation, CheckOnClick = true };
         animation.CheckedChanged += (_, _) => { if (settings.Animation != animation.Checked) Change(() => settings.Animation = animation.Checked); }; menu.Items.Add(animation);
         var icons = new ToolStripMenuItem("아이콘 선택");
@@ -102,7 +102,7 @@ internal sealed class TrayApp : ApplicationContext
         var zooms = new ToolStripMenuItem("아이콘 확대 (여백 줄이기)");
         foreach (int zoom in new[] { 100, 125, 150, 175, 200 }) { var item = new ToolStripMenuItem($"{zoom}%") { Checked = settings.IconZoom == zoom, Tag = zoom }; item.Click += (_, _) => Change(() => settings.IconZoom = zoom); zooms.DropDownItems.Add(item); }
         menu.Items.Add(zooms);
-        menu.Items.Add("아이콘 추가…", null, (_, _) => { popup.Hide(); if (ImportIcon(null)) RebuildMenu(); });
+        menu.Items.Add("아이콘 추가…", null, (_, _) => AfterMenuCloses(() => { popup.Hide(); if (ImportIcon(null)) RebuildMenu(); }));
         menu.Items.Add("아이콘 폴더 열기", null, (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Mascot.Folder) { UseShellExecute = true }));
         menu.Items.Add(new ToolStripSeparator()); menu.Items.Add("종료", null, (_, _) => ExitThread());
         menu.Opening += (_, _) =>
@@ -112,7 +112,18 @@ internal sealed class TrayApp : ApplicationContext
             foreach (ToolStripMenuItem item in icons.DropDownItems) item.Checked = (string?)item.Tag == settings.Icon;
             foreach (ToolStripMenuItem item in sizes.DropDownItems) item.Checked = (int?)item.Tag == settings.IconSize;
         };
-        tray.ContextMenuStrip = menu; old?.Dispose();
+        tray.ContextMenuStrip = menu;
+        // WinForms can still track the old menu as the active dropdown; disposing it now crashes on the next click.
+        if (old != null)
+        {
+            if (old.Visible) old.Closed += (_, _) => AfterMenuCloses(old.Dispose);
+            else AfterMenuCloses(old.Dispose);
+        }
+    }
+    // Runs once the current menu message has finished, so modal dialogs and disposal never happen inside an open tray menu.
+    private static void AfterMenuCloses(Action action)
+    {
+        if (SynchronizationContext.Current is { } context) context.Post(_ => action(), null); else action();
     }
     private void Change(Action change) { change(); mascot.Reload(); try { settings.Save(); } catch { MessageBox.Show("설정을 저장할 수 없습니다."); } }
     protected override void Dispose(bool disposing)

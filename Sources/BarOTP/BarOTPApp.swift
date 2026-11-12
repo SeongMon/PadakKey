@@ -101,6 +101,19 @@ struct MainView: View {
     @State private var search = ""
     @State private var deleting: OTPAccount?
     @State private var loginEnabled = SMAppService.mainApp.status == .enabled
+    // Shared by the header switch and the gear menu so both always show the same login-item state.
+    private var loginBinding: Binding<Bool> {
+        Binding(get: { loginEnabled }, set: { enabled in
+            do {
+                if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+                loginEnabled = SMAppService.mainApp.status == .enabled
+                if enabled && !loginEnabled { SMAppService.openSystemSettingsLoginItems() }
+            } catch {
+                loginEnabled = SMAppService.mainApp.status == .enabled
+                vault.error = error.localizedDescription
+            }
+        })
+    }
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -109,6 +122,9 @@ struct MainView: View {
                     Text("PadakKey").font(.headline)
                 }
                 Spacer()
+                Toggle("로그인 시 실행", isOn: loginBinding)
+                    .toggleStyle(.switch).controlSize(.mini).font(.caption).foregroundStyle(.secondary)
+                    .help("Mac에 로그인하면 PadakKey를 자동으로 실행합니다")
                 Button { addAccount() } label: { Image(systemName: "plus") }.buttonStyle(.bordered).help("계정 추가")
             }.padding(20).fixedSize(horizontal: false, vertical: true)
             Divider()
@@ -175,13 +191,7 @@ struct MainView: View {
                     Button("아이콘 추가…") { importIcon() }
                     Button("아이콘 폴더 열기") { mascot.openIconFolder() }
                     Divider()
-                    Toggle("로그인 시 실행", isOn: Binding(get: { loginEnabled }, set: { enabled in
-                        do {
-                            if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-                            loginEnabled = SMAppService.mainApp.status == .enabled
-                            if enabled && !loginEnabled { SMAppService.openSystemSettingsLoginItems() }
-                        } catch { vault.error = error.localizedDescription }
-                    }))
+                    Toggle("로그인 시 실행", isOn: loginBinding)
                     Divider()
                     Button("종료") { Clipboard.shared.clear(); NSApp.terminate(nil) }
                 } label: { Image(systemName: "gearshape") }.menuStyle(.borderlessButton).frame(width: 30)

@@ -70,9 +70,19 @@ internal static class FocusChecks
             if (copiedNext != Examples[0].Code(60)) throw new Exception("Next copy used a stale period");
             form.Hide();
         }
+        bool startupState = false; int startupWrites = 0;
+        using (var popup = new Popup(storage, _ => { }, () => { }, () => { }, startupEnabled: () => startupState, setStartup: value => { startupState = value; startupWrites++; }))
+        {
+            popup.PreparePreview();
+            var toggle = popup.Controls.OfType<FocusToggle>().Single();
+            if (toggle.Checked) throw new Exception("Startup toggle must reflect the current registration");
+            toggle.Checked = true; if (!startupState || startupWrites != 1) throw new Exception("Startup toggle did not enable startup");
+            toggle.Checked = false; if (startupState || startupWrites != 2) throw new Exception("Startup toggle did not disable startup");
+            startupState = true; popup.PreparePreview(); if (!toggle.Checked || startupWrites != 2) throw new Exception("Startup toggle must reload without writing");
+        }
         storage.Save([Examples[0] with { Digits = 8, Period = 60 }]);
         using (var popup = new Popup(storage, _ => { }, () => { }, () => { })) { popup.PreparePreview(); Capture(popup, output, "otp-eight-digits"); }
-        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live current/next OTP, close after both copy actions");
+        Console.WriteLine("PASS: Focus light/dark rendering, registration, icon settings/custom picker, empty/four-account layout, live current/next OTP, close after both copy actions, main-screen startup toggle");
     }
     private static void Capture(FocusForm form, string? output, string name)
     {

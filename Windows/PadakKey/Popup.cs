@@ -8,8 +8,12 @@ internal sealed class Popup : FocusForm
     private readonly Action<string> copy;
     private readonly Func<string> selectedIcon;
     private readonly PictureBox bird;
-    private readonly Label brand, footerNote, empty;
+    private readonly Label brand, footerNote, empty, startupLabel;
     private readonly FocusButton settingsButton, addButton;
+    private readonly FocusToggle startupToggle;
+    private readonly Func<bool> startupEnabled;
+    private readonly Action<bool> setStartup;
+    private bool startupPreview;
     private readonly TextBox search;
     private readonly Panel searchFrame;
     private readonly FlowLayoutPanel rows;
@@ -20,9 +24,11 @@ internal sealed class Popup : FocusForm
     private Point anchor;
     internal int VisibleAccountCount => codeRows.Count;
 
-    public Popup(Storage storage, Action<string> copy, Action add, Action settings, Func<string>? selectedIcon = null, FocusTheme? theme = null) : base(theme)
+    // Startup accessors default to an in-memory value so previews and checks never touch the real Run key.
+    public Popup(Storage storage, Action<string> copy, Action add, Action settings, Func<string>? selectedIcon = null, FocusTheme? theme = null, Func<bool>? startupEnabled = null, Action<bool>? setStartup = null) : base(theme)
     {
         this.storage = storage; this.copy = copy; this.selectedIcon = selectedIcon ?? (() => "flutter");
+        this.startupEnabled = startupEnabled ?? (() => startupPreview); this.setStartup = setStartup ?? (value => startupPreview = value);
         Text = "PadakKey"; AccessibleName = "PadakKey 인증 코드";
         bird = new PictureBox { SizeMode = PictureBoxSizeMode.Zoom, TabStop = false };
         brand = Label("padakkey", 10.5f, true);
@@ -35,7 +41,16 @@ internal sealed class Popup : FocusForm
         searchFrame.Controls.Add(search);
         rows = new FlowLayoutPanel { AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, BackColor = Theme.Surface, Margin = Padding.Empty, Padding = Padding.Empty };
         empty = Label("", 9); empty.TextAlign = ContentAlignment.MiddleCenter; empty.Margin = Padding.Empty;
-        Controls.AddRange([bird, brand, settingsButton, searchFrame, rows, addButton, footerNote]);
+        startupLabel = Label("시작 시 실행", 8); startupLabel.ForeColor = Theme.Muted; startupLabel.TextAlign = ContentAlignment.MiddleRight;
+        startupToggle = new FocusToggle(Theme) { AccessibleName = "Windows 시작 시 실행", TabStop = true };
+        startupToggle.CheckedChanged += (_, _) =>
+        {
+            if (preparing || startupToggle.Checked == this.startupEnabled()) return;
+            try { this.setStartup(startupToggle.Checked); }
+            catch { preparing = true; startupToggle.Checked = this.startupEnabled(); preparing = false; footerNote.Text = "자동 실행 설정을 저장할 수 없습니다"; footerNote.Visible = true; }
+        };
+        startupLabel.Click += (_, _) => startupToggle.Checked = !startupToggle.Checked;
+        Controls.AddRange([bird, brand, startupLabel, startupToggle, settingsButton, searchFrame, rows, addButton, footerNote]);
         search.TextChanged += (_, _) => { if (!preparing) Render(); };
         tick.Tick += (_, _) => UpdateCodes();
         Deactivate += (_, _) => { if (!preparing) Hide(); };
@@ -65,7 +80,8 @@ internal sealed class Popup : FocusForm
         preparing = true; loadFailed = false;
         try { accounts = storage.Load(); }
         catch { accounts = []; loadFailed = true; }
-        search.Text = "";
+        search.Text = ""; footerNote.Text = "코드를 클릭하면 복사됩니다";
+        try { startupToggle.Checked = startupEnabled(); } catch { startupToggle.Checked = false; }
         bird.Image?.Dispose(); bird.Image = FocusDraw.Sparrow(selectedIcon(), Px(28));
         preparing = false; Render();
     }
@@ -113,8 +129,10 @@ internal sealed class Popup : FocusForm
         int body = Math.Max(Px(80), Math.Min(requested, maxHeight - top - Px(64)));
         if (resize) { preparing = true; ClientSize = new Size(Px(370), top + body + Px(64)); preparing = false; contentWidth = ClientSize.Width - 2 * inset; }
         bird.SetBounds(inset, Px(20), Px(27), Px(27));
-        brand.SetBounds(inset + Px(36), Px(21), contentWidth - Px(80), Px(25));
+        brand.SetBounds(inset + Px(36), Px(21), contentWidth - Px(196), Px(25));
         settingsButton.SetBounds(ClientSize.Width - inset - Px(32), Px(18), Px(32), Px(32));
+        startupToggle.SetBounds(settingsButton.Left - Px(48), Px(18), Px(44), Px(32));
+        startupLabel.SetBounds(startupToggle.Left - Px(80), Px(18), Px(80), Px(32));
         searchFrame.SetBounds(inset, Px(61), contentWidth, Px(33));
         search.SetBounds(Px(10), Px(7), contentWidth - Px(20), Px(23));
         rows.SetBounds(inset, top, contentWidth, body);
@@ -160,7 +178,7 @@ internal sealed class OtpRow : Panel
         nextCode = new OtpCodeButton(theme, next: true) { Font = new Font("Consolas", account.Digits == 8 ? 15 : 19), AccessibleName = service.Text + " 다음 OTP 복사", AccessibleDescription = "다음 갱신 주기부터 사용할 수 있는 코드를 복사합니다." };
         nextCode.Click += (_, _) => CopyCode(next: true);
         more = new FocusButton(theme) { Glyph = FocusDraw.More, Quiet = true, AccessibleName = service.Text + " 계정 관리" };
-        more.Click += (_, _) => { var menu = new ContextMenuStrip { Font = theme.Font() }; menu.Items.Add("계정 삭제…", null, (_, _) => delete()); menu.Closed += (_, _) => menu.Dispose(); menu.Show(more, new Point(0, more.Height)); };
+        more.Click += (_, _) => { var menu = new ContextMenuStrip { Font = theme.Font() }; var ui = SynchronizationContext.Current; void Later(Action action) { if (ui != null) ui.Post(_ => action(), null); else action(); } menu.Items.Add("계정 삭제…", null, (_, _) => Later(delete)); menu.Closed += (_, _) => Later(menu.Dispose); menu.Show(more, new Point(0, more.Height)); };
         Controls.AddRange([service, name, code, nextCode, more]);
     }
     private void CopyCode(bool next = false)
