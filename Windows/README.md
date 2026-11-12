@@ -4,9 +4,9 @@ Windows 11 x64용 트레이 앱입니다. Windows 10은 현재 실제 기기 검
 
 ## 실행
 
-[Windows 0.1.23 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.23/PadakKey-Windows-x64.zip)를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
+[Windows 0.1.25 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-Windows-x64.zip)를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
 
-공개 릴리스에서 GitHub 로그인 없이 다운로드할 수 있습니다. [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.23)에서 운영체제별 실제 버전과 변경사항을 확인하세요.
+공개 릴리스에서 GitHub 로그인 없이 다운로드할 수 있습니다. [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.25)에서 운영체제별 실제 버전과 변경사항을 확인하세요.
 
 업데이트할 때는 실행 중인 PadakKey를 종료하고 새 ZIP 전체를 풀어 실행하세요. 계정과 설정은 프로그램 폴더와 별개인 `%LOCALAPPDATA%\PadakKey`에 저장되므로 이 데이터 폴더를 덮어쓰거나 삭제하지 마세요.
 
@@ -27,7 +27,7 @@ Windows 11 x64용 트레이 앱입니다. Windows 10은 현재 실제 기기 검
 ## 설정과 데이터
 
 - 톱니바퀴: 참새 미리보기가 있는 설정 창. 파닥이는 참새 / 조는 참새, 애니메이션 ON/OFF, 아이콘 크기 60~100%, 확대 100~200%, 사용자 PNG/GIF 추가·선택, 아이콘 폴더 열기
-- 설정의 **Windows 시작 시 실행**: 현재 사용자 로그인 시 실행. 기본값은 꺼짐이며 사용자가 켰을 때만 등록합니다.
+- **시작 시 실행**: 상태창 위쪽 톱니바퀴 옆 스위치 또는 설정 창에서 켜고 끕니다. 현재 사용자 로그인 시 실행되며, 기본값은 꺼짐이고 사용자가 켰을 때만 등록합니다.
 - 시스템 라이트/다크 색상을 실행 시 반영합니다. 4개 이상 계정은 검색과 목록 스크롤을 제공하며, Ctrl+F로 검색을 열 수도 있습니다. 각 계정의 `…` 메뉴에서 삭제할 수 있습니다.
 - Windows 트레이 칸의 크기 자체는 OS가 정합니다. 100%가 칸 내부 최대 크기입니다.
 - 설정과 아이콘: `%LOCALAPPDATA%\PadakKey`

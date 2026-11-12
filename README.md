@@ -4,16 +4,16 @@
 
 ## 다운로드
 
-최신 공개 패키지: **Mac 0.1.22 / Windows 0.1.23** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.23)
+최신 공개 패키지: **Mac 0.1.24 / Windows 0.1.25** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.25)
 
 | 운영체제 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.23/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
-| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.23/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
+| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
 
-공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. Mac과 Windows 모두 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드를 제공합니다. 이번 릴리스는 Windows를 0.1.23으로 업데이트하며 Mac은 검증된 0.1.22 패키지를 유지합니다.
+공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. Mac과 Windows 모두 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드를 제공합니다. 이번 릴리스는 두 운영체제 모두 첫 화면에 **시작 시 실행**(Mac: 로그인 시 실행) 스위치를 추가하고, 참새 앱 아이콘을 적용했습니다. Windows는 트레이 메뉴로 설정을 연 뒤 앱이 종료되던 문제도 수정했습니다.
 
-Mac 패키지는 고정 로컬 개발 인증서 서명이며 Apple 공증 전이고, Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
+이번 Mac 0.1.24 패키지는 GitHub Actions에서 빌드한 임시(ad-hoc) 서명이며 Apple 공증 전입니다. 이전 로컬 인증서 서명 빌드에서 업데이트하면 키체인 접근을 한 번 다시 허용해야 할 수 있습니다. Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
 
 Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레이 칸 안에서 크기와 확대율을 조절합니다.
 
