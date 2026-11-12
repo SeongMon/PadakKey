@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION="${VERSION:-0.1.23}"
+VERSION="${VERSION:-0.1.24}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION must be x.y.z'; exit 1; }
 ARCH="${ARCH:-universal}"
 # Sign outside cloud/file-provider folders, which may inject Finder metadata.
@@ -27,7 +27,15 @@ else
   cp "$BIN" "$APP/Contents/MacOS/BarOTP"
 fi
 cp Sources/BarOTP/Resources/*.png "$APP/Contents/Resources/"
-cat > "$APP/Contents/Info.plist" <<PLIST
+# App icon: build AppIcon.icns from the 1024px master (regenerate it with scripts/make-app-icon.ps1).
+ICONSET="$STAGING/AppIcon.iconset"
+mkdir -p "$ICONSET"
+for SIZE in 16 32 128 256 512; do
+  sips -z "$SIZE" "$SIZE" Icons/AppIcon/AppIcon-1024.png --out "$ICONSET/icon_${SIZE}x${SIZE}.png" >/dev/null
+  sips -z "$((SIZE * 2))" "$((SIZE * 2))" Icons/AppIcon/AppIcon-1024.png --out "$ICONSET/icon_${SIZE}x${SIZE}@2x.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+cat >"$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -35,6 +43,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleIdentifier</key><string>app.barotp.mac</string>
 <key>CFBundleName</key><string>PadakKey</string>
 <key>CFBundleDisplayName</key><string>PadakKey</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>CFBundleVersion</key><string>$VERSION</string>
