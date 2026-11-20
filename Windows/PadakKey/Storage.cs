@@ -40,6 +40,7 @@ internal sealed class Storage(string root)
 internal sealed class Settings
 {
     public bool Animation { get; set; } = true;
+    public bool Countdown { get; set; } = true;
     public int IconZoom { get; set; } = 100;
     public int IconSize { get; set; } = 100;
     public string Icon { get; set; } = "flutter";

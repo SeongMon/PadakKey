@@ -22,6 +22,19 @@ extension Bundle {
             Mirror(reflecting: object).children.first(where: { $0.label == "timer" })?.value as? Timer
         }
         assert(timer(mascot) == nil)
+        // Countdown ring: on by default, widens the status image, no timer without a status button.
+        assert(mascot.countdownEnabled && mascot.statusWidth == 24 + 3 + 12)
+        assert(MenuMascot.remaining(at: Date(timeIntervalSince1970: 60)) == 30)
+        assert(MenuMascot.remaining(at: Date(timeIntervalSince1970: 89.5)) == 0.5)
+        assert(mascot.statusImage(mascot.preview).size.width == mascot.statusWidth)
+        let countdown = Mirror(reflecting: mascot).children.first(where: { $0.label == "countdownTimer" })?.value as? Timer
+        assert(countdown == nil)
+        mascot.countdownEnabled = false
+        assert(mascot.statusWidth == 24 && mascot.statusImage(mascot.preview) === mascot.preview)
+        mascot.countdownEnabled = true
+        mascot.flashCopied()
+        assert(mascot.statusImage(mascot.preview).accessibilityDescription == "PadakKey, 인증 코드 복사됨")
+        assert(mascot.statusImage(mascot.preview, at: Date().addingTimeInterval(5)).accessibilityDescription?.contains("갱신까지") == true)
         mascot.enabled = true
         if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { assert(timer(mascot)?.isValid == true) }
         let pending = timer(mascot)

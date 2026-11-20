@@ -23,6 +23,8 @@ import OTPCore
     private var statusItem: NSStatusItem?
     private var iconSizeObservation: AnyCancellable?
     private let popover = NSPopover()
+    private var resignObserver: NSObjectProtocol?
+    private var quickCopyPending = false
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let bundleID = Bundle.main.bundleIdentifier,
            let existing = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first(where: { $0.processIdentifier < ProcessInfo.processInfo.processIdentifier }) {
@@ -31,16 +33,25 @@ import OTPCore
             return
         }
         // App-level ownership keeps the status item and registration window alive.
-        let item = NSStatusBar.system.statusItem(withLength: CGFloat(mascot.iconSize + 6))
+        let item = NSStatusBar.system.statusItem(withLength: mascot.statusWidth + 6)
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
         item.button?.toolTip = "PadakKey 0.1.22"
         item.button?.target = self
-        item.button?.action = #selector(togglePopover)
+        item.button?.action = #selector(statusClicked)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
-        iconSizeObservation = mascot.$iconSize.sink { [weak self] size in
-            self?.statusItem?.length = CGFloat(size + 6)
+        iconSizeObservation = mascot.$statusWidth.sink { [weak self] width in
+            self?.statusItem?.length = width + 6
+        }
+        // Close the panel as soon as another app comes forward (Cmd+Tab, Dock, Mission Control),
+        // not only on clicks outside it. Skip while SecurityAgent owns focus for Keychain access.
+        resignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.popover.isShown, self.popover.behavior == .transient else { return }
+                self.popover.performClose(nil)
+            }
         }
         popover.delegate = self
         popover.behavior = .transient
@@ -60,12 +71,38 @@ import OTPCore
             DispatchQueue.main.async { self.registration.show(vault: self.vault) }
         }))
     }
-    @objc private func togglePopover() {
+    /// Left click: copy the current code right away when there is exactly one account and more than
+    /// 5 seconds left; otherwise (several accounts, last 5 seconds, Keychain prompt, errors) open the panel.
+    /// Right click or Option-click always opens the panel.
+    @objc private func statusClicked() {
+        let event = NSApp.currentEvent
+        let wantsPanel = event?.type == .rightMouseUp || event?.modifierFlags.contains(.option) == true
+        FileHandle.standardError.write("[quick-copy] click type=\(String(describing: event?.type)) panelShown=\(popover.isShown) wantsPanel=\(wantsPanel) pending=\(quickCopyPending)\n".data(using: .utf8)!)
+        if popover.isShown || wantsPanel { togglePopover(); return }
+        guard !quickCopyPending else { return }
+        quickCopyPending = true
+        vault.load { [weak self] ok in
+            guard let self else { return }
+            self.quickCopyPending = false
+            let now = Date()
+            FileHandle.standardError.write("[quick-copy] load ok=\(ok) accounts=\(self.vault.accounts.count) needsAuth=\(self.vault.needsAuthorization) error=\(self.vault.error ?? "-") remaining=\(self.vault.accounts.first.map { $0.period - Int(now.timeIntervalSince1970) % $0.period } ?? -1)\n".data(using: .utf8)!)
+            if ok, self.vault.accounts.count == 1, let account = self.vault.accounts.first,
+               account.period - Int(now.timeIntervalSince1970) % account.period > 5,
+               let code = try? account.code(at: now) {
+                Clipboard.shared.copy(code)
+                self.vault.clear() // Do not keep secrets in memory after a quick copy.
+                self.mascot.flashCopied()
+            } else {
+                self.togglePopover(reload: false)
+            }
+        }
+    }
+    private func togglePopover(reload: Bool = true) {
         guard let button = statusItem?.button else { return }
         if popover.isShown { popover.performClose(nil) }
         else {
             NSApp.activate(ignoringOtherApps: true)
-            vault.load()
+            if reload || !vault.loaded { vault.load() }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
     }
@@ -172,6 +209,7 @@ struct MainView: View {
             HStack {
                 Menu {
                     Toggle("애니메이션", isOn: $mascot.enabled)
+                    Toggle("코드 남은 시간 표시", isOn: $mascot.countdownEnabled)
                     Menu("아이콘 크기") {
                         Picker("크기", selection: $mascot.iconSize) {
                             ForEach([16, 20, 22, 24], id: \.self) { size in Text("\(size) pt").tag(size) }

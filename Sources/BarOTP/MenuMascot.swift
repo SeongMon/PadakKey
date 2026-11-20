@@ -14,17 +14,26 @@ import UniformTypeIdentifiers
         didSet { defaults.set(iconZoom, forKey: "iconZoom"); loadSelection() }
     }
     @Published var iconSize: Int {
-        didSet { defaults.set(iconSize, forKey: "iconSize"); loadSelection() }
+        didSet { defaults.set(iconSize, forKey: "iconSize"); updateStatusWidth(); loadSelection() }
     }
     @Published var selected: String {
         didSet { defaults.set(selected, forKey: "selectedIcon"); loadSelection() }
     }
+    @Published var countdownEnabled: Bool {
+        didSet { defaults.set(countdownEnabled, forKey: "countdownRingEnabled"); updateStatusWidth(); resetCountdown() }
+    }
+    /// Width of the status bar image: mascot plus, when enabled, the OTP countdown ring.
+    @Published private(set) var statusWidth: CGFloat = 24
     @Published private(set) var customs: [Choice] = []
     @Published private(set) var preview = NSImage()
     private let defaults: UserDefaults
     private let directory: URL
     private weak var button: NSStatusBarButton?
     private var timer: Timer?
+    private var countdownTimer: Timer?
+    private var shownFrame: NSImage?
+    private var copiedUntil = Date.distantPast
+    nonisolated static let countdownPeriod: TimeInterval = 30
     private var generation = 0
     private var frames: [Frame] = []
     private var observers: [NSObjectProtocol] = []
@@ -45,10 +54,12 @@ import UniformTypeIdentifiers
         let savedSize = defaults.integer(forKey: "iconSize")
         iconSize = [16, 20, 22, 24].contains(savedSize) ? savedSize : 24
         selected = defaults.string(forKey: "selectedIcon") ?? "sparrow-flutter"
+        countdownEnabled = defaults.object(forKey: "countdownRingEnabled") as? Bool ?? true
         refreshCustoms()
         if !Self.builtins.contains(where: { $0.id == selected }) && !customs.contains(where: { $0.id == selected }) {
             selected = "sparrow-flutter"
         }
+        updateStatusWidth()
         loadSelection()
     }
     static func asset(_ name: String) -> NSImage? {
@@ -142,6 +153,13 @@ import UniformTypeIdentifiers
         observers.append(center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.sleeping = false; self?.resetAnimation() }
         })
+        // Stop the 1 Hz countdown while the displays are off; nobody can see it.
+        observers.append(center.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.sleeping = true; self?.resetAnimation() }
+        })
+        observers.append(center.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.sleeping = false; self?.resetAnimation() }
+        })
         observers.append(center.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.resetAnimation() }
         })
@@ -150,7 +168,8 @@ import UniformTypeIdentifiers
     private func resetAnimation() {
         generation += 1
         timer?.invalidate(); timer = nil
-        button?.image = preview
+        display(preview)
+        resetCountdown()
         guard enabled, !sleeping, frames.count > 1, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
         schedule(after: 0, generation: generation)
     }
@@ -159,13 +178,96 @@ import UniformTypeIdentifiers
             Task { @MainActor in
                 guard let self, self.enabled, self.generation == token else { return }
                 let next = (index + 1) % self.frames.count
-                self.button?.image = self.frames[next].image
+                self.display(self.frames[next].image)
                 self.schedule(after: next, generation: token)
             }
         }
         timer.tolerance = 0.02
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
+    }
+    // MARK: OTP countdown ring
+
+    private func updateStatusWidth() {
+        let size = CGFloat(iconSize)
+        statusWidth = countdownEnabled ? size + Self.ringGap + Self.ringDiameter(for: size) : size
+    }
+    private static let ringGap: CGFloat = 3
+    static func ringDiameter(for iconSize: CGFloat) -> CGFloat { min(13, max(9, (iconSize * 0.5).rounded())) }
+    /// Seconds left in the current OTP window (TOTP windows are aligned to Unix time).
+    nonisolated static func remaining(at date: Date = Date(), period: TimeInterval = countdownPeriod) -> TimeInterval {
+        period - date.timeIntervalSince1970.truncatingRemainder(dividingBy: period)
+    }
+    private func display(_ frame: NSImage) {
+        shownFrame = frame
+        button?.image = statusImage(frame)
+    }
+    private func resetCountdown() {
+        countdownTimer?.invalidate(); countdownTimer = nil
+        if let shownFrame { button?.image = statusImage(shownFrame) }
+        guard countdownEnabled, !sleeping, button != nil else { return }
+        // One redraw per second, aligned to the second boundary so the ring flips with the code.
+        let next = Date(timeIntervalSince1970: floor(Date().timeIntervalSince1970) + 1)
+        let timer = Timer(fire: next, interval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let frame = self.shownFrame else { return }
+                self.button?.image = self.statusImage(frame)
+            }
+        }
+        timer.tolerance = 0.1
+        RunLoop.main.add(timer, forMode: .common)
+        countdownTimer = timer
+    }
+    /// Briefly swaps the ring for a checkmark so a click-to-copy has visible feedback.
+    func flashCopied(for duration: TimeInterval = 1.2) {
+        copiedUntil = Date().addingTimeInterval(duration)
+        if let shownFrame { button?.image = statusImage(shownFrame) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration + 0.05) { [weak self] in
+            guard let self, let frame = self.shownFrame else { return }
+            self.button?.image = self.statusImage(frame)
+        }
+    }
+    func statusImage(_ frame: NSImage, at date: Date = Date()) -> NSImage {
+        guard countdownEnabled else { return frame }
+        let height = CGFloat(iconSize)
+        let diameter = Self.ringDiameter(for: height)
+        let remaining = Self.remaining(at: date)
+        let seconds = Int(remaining.rounded(.up))
+        let fraction = CGFloat(min(1, max(0, remaining / Self.countdownPeriod)))
+        let copied = date < copiedUntil
+        // Drawn lazily, so labelColor resolves against the menu bar's current light/dark appearance.
+        let image = NSImage(size: NSSize(width: statusWidth, height: height), flipped: false) { _ in
+            NSGraphicsContext.current?.imageInterpolation = .none
+            frame.draw(in: NSRect(x: 0, y: 0, width: height, height: height))
+            let line = max(1.5, (diameter * 0.17).rounded(.toNearestOrAwayFromZero))
+            let rect = NSRect(x: height + Self.ringGap, y: (height - diameter) / 2, width: diameter, height: diameter)
+                .insetBy(dx: line / 2, dy: line / 2)
+            if copied {
+                let check = NSBezierPath()
+                check.move(to: NSPoint(x: rect.minX + rect.width * 0.08, y: rect.midY))
+                check.line(to: NSPoint(x: rect.minX + rect.width * 0.4, y: rect.minY + rect.height * 0.15))
+                check.line(to: NSPoint(x: rect.maxX, y: rect.maxY - rect.height * 0.05))
+                check.lineWidth = line + 0.5
+                check.lineCapStyle = .round; check.lineJoinStyle = .round
+                NSColor.systemGreen.setStroke()
+                check.stroke()
+                return true
+            }
+            let track = NSBezierPath(ovalIn: rect)
+            track.lineWidth = line
+            NSColor.labelColor.withAlphaComponent(0.22).setStroke()
+            track.stroke()
+            let arc = NSBezierPath()
+            let center = NSPoint(x: rect.midX, y: rect.midY)
+            arc.appendArc(withCenter: center, radius: rect.width / 2, startAngle: 90, endAngle: 90 - 360 * fraction, clockwise: true)
+            arc.lineWidth = line
+            arc.lineCapStyle = .round
+            (seconds <= 5 ? NSColor.systemRed : NSColor.labelColor).setStroke()
+            arc.stroke()
+            return true
+        }
+        image.accessibilityDescription = copied ? "PadakKey, 인증 코드 복사됨" : "PadakKey, 코드 갱신까지 \(seconds)초"
+        return image
     }
     enum IconError: LocalizedError {
         case invalid, tooLarge
