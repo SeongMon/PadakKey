@@ -4,9 +4,9 @@ Windows 11 x64용 트레이 앱입니다. Windows 10은 현재 실제 기기 검
 
 ## 실행
 
-[Windows 0.1.25 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-Windows-x64.zip)를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
+[Windows 0.1.26 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.26/PadakKey-Windows-x64.zip)를 다운로드하고 ZIP 전체를 폴더에 풀어 `PadakKey.exe`를 실행하세요. .NET 런타임은 포함됩니다. 최상단에는 `PadakKey.exe`와 `Assets` 폴더만 있습니다. DLL과 .NET 런타임은 실행 파일에 묶었습니다. `Assets` 폴더는 실행 파일 옆에 유지하세요. 코드 서명되지 않은 개발 빌드로 Windows가 게시자 확인 경고를 표시할 수 있습니다.
 
-공개 릴리스에서 GitHub 로그인 없이 다운로드할 수 있습니다. [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.25)에서 운영체제별 실제 버전과 변경사항을 확인하세요.
+공개 릴리스에서 GitHub 로그인 없이 다운로드할 수 있습니다. [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.26)에서 운영체제별 실제 버전과 변경사항을 확인하세요.
 
 업데이트할 때는 실행 중인 PadakKey를 종료하고 새 ZIP 전체를 풀어 실행하세요. 계정과 설정은 프로그램 폴더와 별개인 `%LOCALAPPDATA%\PadakKey`에 저장되므로 이 데이터 폴더를 덮어쓰거나 삭제하지 마세요.
 

@@ -4,16 +4,16 @@
 
 ## 다운로드
 
-최신 공개 패키지: **Mac 0.1.24 / Windows 0.1.25** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.25)
+최신 공개 패키지: **Mac 0.1.25 / Windows 0.1.26** — [릴리스 안내](https://github.com/SeongMon/PadakKey/releases/tag/desktop-v0.1.26)
 
 | 운영체제 | 다운로드 | 실행 방법 |
 | --- | --- | --- |
-| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
-| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.25/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
+| macOS 13+ · Apple Silicon / Intel | [Mac 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.26/PadakKey-macOS-universal.zip) | 압축을 풀고 PadakKey.app을 응용 프로그램 폴더로 이동 |
+| Windows 11 · x64 | [Windows 다운로드](https://github.com/SeongMon/PadakKey/releases/download/desktop-v0.1.26/PadakKey-Windows-x64.zip) | ZIP 전체를 풀고 PadakKey.exe 실행. Assets 폴더를 옆에 유지 |
 
-공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. Mac과 Windows 모두 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드를 제공합니다. 이번 릴리스는 두 운영체제 모두 첫 화면에 **시작 시 실행**(Mac: 로그인 시 실행) 스위치를 추가하고, 참새 앱 아이콘을 적용했습니다. Windows는 트레이 메뉴로 설정을 연 뒤 앱이 종료되던 문제도 수정했습니다.
+공개 릴리스 파일은 GitHub 로그인 없이 다운로드할 수 있습니다. Mac과 Windows 모두 현재/다음 OTP 클릭 박스, 현재 박스 내부 원형 타이머, 회색 다음 코드를 제공합니다. 이번 릴리스는 두 운영체제 모두 메뉴 막대·트레이 아이콘에 **30초 갱신 링**을 표시하고, 계정이 하나일 때 **아이콘 클릭 한 번으로 현재 코드를 복사**합니다. Mac은 다른 앱으로 전환하면 인증 코드 창이 닫힙니다.
 
-이번 Mac 0.1.24 패키지는 GitHub Actions에서 빌드한 임시(ad-hoc) 서명이며 Apple 공증 전입니다. 이전 로컬 인증서 서명 빌드에서 업데이트하면 키체인 접근을 한 번 다시 허용해야 할 수 있습니다. Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
+이번 Mac 0.1.25 패키지는 이 프로젝트의 로컬 개발 인증서(PadakKey Local Development)로 서명했으며 Developer ID 서명·Apple 공증 전입니다. macOS가 처음 실행을 막을 수 있고, 이전 ad-hoc 빌드에서 업데이트하면 키체인 접근을 한 번 다시 허용해야 할 수 있습니다. Windows는 코드 서명 전인 미리보기입니다. OS의 게시자 확인 경고나 실행 제한이 나타날 수 있습니다.
 
 Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레이 칸 안에서 크기와 확대율을 조절합니다.
 
@@ -42,7 +42,9 @@ Mac 기본 아이콘은 **24pt · 확대 100%**입니다. Windows는 OS 트레�
 
 ## 기능
 
-- 참새 아이콘을 누르면 계정별 현재 OTP와 갱신까지 남은 시간을 표시
+- 참새 아이콘 옆(Mac) 또는 테두리(Windows)에 **30초 갱신 링** 표시. 1초마다 줄고 마지막 5초는 빨간색. 설정의 **코드 남은 시간 표시**로 끌 수 있음
+- 계정이 하나이고 5초보다 많이 남았으면 **아이콘 왼쪽 클릭으로 현재 코드를 바로 복사**(초록 표시). 계정이 여럿이거나 마지막 5초에는 인증 코드 창을 엶. Mac은 오른쪽·Option 클릭, Windows는 Shift·Alt 클릭으로 항상 창을 엶
+- 인증 코드 창에서 계정별 현재 OTP와 갱신까지 남은 시간을 표시. 다른 앱으로 전환하면 창이 닫힘
 - 현재 코드 옆에 **다음** 갱신 코드를 같은 크기의 회색 박스로 표시. 다음 코드는 다음 갱신 주기부터 사용
 - 현재·다음 숫자에 같은 마우스 오버 강조 효과 적용. 별도 복사 버튼 없이 **박스 어디를 클릭해도 복사하고 창을 닫음**
 - 하단에 ‘코드를 클릭하면 복사됩니다’ 안내 표시. 복사 30초 후 클립보드가 다른 내용으로 바뀌지 않았을 때만 앱이 복사한 내용을 삭제

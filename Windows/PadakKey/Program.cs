@@ -27,13 +27,32 @@ internal sealed class TrayApp : ApplicationContext
     public TrayApp()
     {
         mascot = new(tray, settings); popup = new(storage, Copy, Add, ShowSettings, () => settings.Icon, startupEnabled: () => StartupRegistration.Enabled, setStartup: StartupRegistration.Set);
-        tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) { if (popup.Visible) popup.Hide(); else popup.Open(); } };
+        tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) LeftClick(); };
         clearTimer.Tick += (_, _) => ClearClipboard(); RebuildMenu();
         Microsoft.Win32.SystemEvents.SessionSwitch += SessionChanged;
     }
     private void SessionChanged(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
     {
-        if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock && popup.IsHandleCreated) popup.BeginInvoke(() => { popup.Hide(); ClearClipboard(); });
+        if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock && popup.IsHandleCreated) popup.BeginInvoke(() => { popup.Hide(); ClearClipboard(); mascot.Paused = true; });
+        if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionUnlock && popup.IsHandleCreated) popup.BeginInvoke(() => mascot.Paused = false);
+    }
+    /// Left click copies the current code right away when there is exactly one account and more than 5 seconds left.
+    /// Otherwise (several accounts, the last 5 seconds, load errors) it opens the popup. Shift/Alt+click always opens it.
+    private void LeftClick()
+    {
+        if (popup.Visible) { popup.Hide(); return; }
+        if ((Control.ModifierKeys & (Keys.Shift | Keys.Alt)) != 0) { popup.Open(); return; }
+        try
+        {
+            var accounts = storage.Load();
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (accounts.Count == 1 && accounts[0].Period - now % accounts[0].Period > 5)
+            {
+                Copy(accounts[0].Code(now)); mascot.FlashCopied(); return;
+            }
+        }
+        catch { /* Fall through to the popup, which explains load and clipboard errors. */ }
+        popup.Open();
     }
     private void Copy(string code)
     {
@@ -76,7 +95,7 @@ internal sealed class TrayApp : ApplicationContext
         if (dialog.ShowDialog(owner) != DialogResult.OK) return false;
         try
         {
-            var test = Mascot.ReadCustom(dialog.FileName); foreach (var frame in test) frame.Icon.Dispose();
+            var test = Mascot.ReadCustom(dialog.FileName); foreach (var frame in test) frame.Image.Dispose();
             Directory.CreateDirectory(Mascot.Folder);
             string name = Path.GetFileNameWithoutExtension(dialog.FileName), ext = Path.GetExtension(dialog.FileName), dest = Path.Combine(Mascot.Folder, name + ext); int n = 2;
             while (File.Exists(dest)) dest = Path.Combine(Mascot.Folder, name + "-" + n++ + ext);
@@ -91,6 +110,8 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add("설정 및 아이콘 변경…", null, (_, _) => AfterMenuCloses(ShowSettings)); menu.Items.Add(new ToolStripSeparator());
         var animation = new ToolStripMenuItem("애니메이션") { Checked = settings.Animation, CheckOnClick = true };
         animation.CheckedChanged += (_, _) => { if (settings.Animation != animation.Checked) Change(() => settings.Animation = animation.Checked); }; menu.Items.Add(animation);
+        var countdown = new ToolStripMenuItem("코드 남은 시간 표시") { Checked = settings.Countdown, CheckOnClick = true };
+        countdown.CheckedChanged += (_, _) => { if (settings.Countdown != countdown.Checked) Change(() => settings.Countdown = countdown.Checked); }; menu.Items.Add(countdown);
         var icons = new ToolStripMenuItem("아이콘 선택");
         void Choice(string title, string id) { var item = new ToolStripMenuItem(title) { Checked = settings.Icon == id, Tag = id }; item.Click += (_, _) => Change(() => settings.Icon = id); icons.DropDownItems.Add(item); }
         Choice("파닥이는 참새", "flutter"); Choice("조는 참새", "doze"); Directory.CreateDirectory(Mascot.Folder);
@@ -107,7 +128,7 @@ internal sealed class TrayApp : ApplicationContext
         menu.Items.Add(new ToolStripSeparator()); menu.Items.Add("종료", null, (_, _) => ExitThread());
         menu.Opening += (_, _) =>
         {
-            animation.Checked = settings.Animation;
+            animation.Checked = settings.Animation; countdown.Checked = settings.Countdown;
             foreach (ToolStripMenuItem item in zooms.DropDownItems) item.Checked = (int?)item.Tag == settings.IconZoom;
             foreach (ToolStripMenuItem item in icons.DropDownItems) item.Checked = (string?)item.Tag == settings.Icon;
             foreach (ToolStripMenuItem item in sizes.DropDownItems) item.Checked = (int?)item.Tag == settings.IconSize;
