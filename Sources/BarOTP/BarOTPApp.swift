@@ -37,7 +37,7 @@ import OTPCore
         item.autosaveName = "PadakKey.MainStatusItem"
         item.isVisible = true
         mascot.attach(to: item.button)
-        item.button?.toolTip = "PadakKey 0.1.22"
+        item.button?.toolTip = "PadakKey " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
         item.button?.target = self
         item.button?.action = #selector(statusClicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -77,7 +77,6 @@ import OTPCore
     @objc private func statusClicked() {
         let event = NSApp.currentEvent
         let wantsPanel = event?.type == .rightMouseUp || event?.modifierFlags.contains(.option) == true
-        FileHandle.standardError.write("[quick-copy] click type=\(String(describing: event?.type)) panelShown=\(popover.isShown) wantsPanel=\(wantsPanel) pending=\(quickCopyPending)\n".data(using: .utf8)!)
         if popover.isShown || wantsPanel { togglePopover(); return }
         guard !quickCopyPending else { return }
         quickCopyPending = true
@@ -85,7 +84,6 @@ import OTPCore
             guard let self else { return }
             self.quickCopyPending = false
             let now = Date()
-            FileHandle.standardError.write("[quick-copy] load ok=\(ok) accounts=\(self.vault.accounts.count) needsAuth=\(self.vault.needsAuthorization) error=\(self.vault.error ?? "-") remaining=\(self.vault.accounts.first.map { $0.period - Int(now.timeIntervalSince1970) % $0.period } ?? -1)\n".data(using: .utf8)!)
             if ok, self.vault.accounts.count == 1, let account = self.vault.accounts.first,
                account.period - Int(now.timeIntervalSince1970) % account.period > 5,
                let code = try? account.code(at: now) {
